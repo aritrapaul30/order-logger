@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Logger</title>
+<style>
+  :root { --dark:#075e54; --mid:#128c7e; --light:#25d366; --bg:#eef1f0; --line:#d7dddb; --err:#c62828; --ok:#2e7d32; --warn:#b26a00; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; }
+  body { font:15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display:flex; flex-direction:column; background:var(--bg); color:#15201e; }
+  header { background:var(--dark); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; gap:10px; flex-wrap:wrap; }
+  .who { display:flex; align-items:center; gap:10px; min-width:0; }
+  .avatar { width:38px; height:38px; border-radius:50%; background:var(--light); display:grid; place-items:center; font-weight:700; flex:none; }
+  .who small { display:block; opacity:.85; font-size:12.5px; }
+  header button, .hbtn { background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:18px; padding:7px 13px; font:inherit; font-size:13.5px; cursor:pointer; }
+  header button:hover { background:rgba(255,255,255,.25); }
+  header button.primary { background:var(--light); color:#063; font-weight:600; }
+  nav { display:flex; background:var(--mid); padding:0 10px; overflow-x:auto; }
+  nav button { background:none; border:0; color:#d9f3ee; font:inherit; font-weight:600; padding:11px 16px; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; }
+  nav button.active { color:#fff; border-bottom-color:#fff; }
+  .badge { background:#fff; color:var(--dark); border-radius:10px; padding:0 7px; font-size:12px; margin-left:4px; }
+  .tab { display:none; flex:1; overflow-y:auto; padding:16px; }
+  .tab.active { display:block; }
+  #tab-chat.active { display:flex; flex-direction:column; padding:0; overflow:hidden; }
+  .panel { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:16px; max-width:1000px; margin:0 auto 14px; }
+  .panel h2 { margin:0 0 4px; font-size:16px; color:var(--dark); }
+  .hint { font-size:13px; color:#5b6866; margin:0 0 10px; }
+  textarea.paste { width:100%; min-height:150px; border:1.5px dashed #9fb7b2; border-radius:8px; padding:10px; font:14px/1.45 inherit; background:#fbfdfc; resize:vertical; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px 14px; }
+  .field label { display:block; font-size:12.5px; font-weight:600; color:#40514e; margin-bottom:3px; }
+  .field input { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; font:inherit; background:#fff; }
+  .field input:focus { outline:2px solid #9be0d0; border-color:var(--mid); }
+  .field.wide { grid-column:1 / -1; }
+  .field.filled input { background:#effaf5; border-color:#9fd8c4; }
+  .field.locked input { background:#e4f1ec; color:#30443f; cursor:not-allowed; }
+  .lock { font-weight:500; font-size:11.5px; color:#2f7d68; margin-left:6px; }
+  .lock a { color:#128c7e; cursor:pointer; text-decoration:underline; }
+  .pick { margin:4px 6px 0 0; }
+  .field small { font-size:11.5px; color:#6b7a77; }
+  .req::after { content:" *"; color:var(--err); }
+  .actions { display:flex; gap:10px; margin-top:14px; align-items:center; flex-wrap:wrap; }
+  .btn { border:0; border-radius:18px; padding:9px 18px; font:inherit; font-weight:600; cursor:pointer; background:var(--mid); color:#fff; }
+  .btn.ghost { background:#e3e9e7; color:#2b3a37; }
+  .btn.small { padding:6px 12px; font-size:13.5px; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .note { border-radius:8px; padding:9px 12px; margin-top:10px; font-size:14px; }
+  .note.ok { background:#e8f5e9; color:var(--ok); } .note.err { background:#fdecea; color:var(--err); } .note.warn { background:#fff4e0; color:var(--warn); }
+  table.list { width:100%; border-collapse:collapse; font-size:14px; }
+  table.list th { text-align:left; font-size:12.5px; color:#5b6866; border-bottom:1px solid var(--line); padding:6px 8px; }
+  table.list td { padding:8px; border-bottom:1px solid #edf1f0; vertical-align:middle; }
+  table.list input[type=date] { padding:5px; border:1px solid var(--line); border-radius:6px; font:inherit; font-size:13px; }
+  .empty { text-align:center; color:#6b7a77; padding:20px; }
+  /* chat */
+  #chat { flex:1; overflow-y:auto; padding:16px 4vw 8px; display:flex; flex-direction:column; gap:8px; background:#ece5dd; }
+  .msg { max-width:min(680px, 88%); padding:8px 11px 6px; border-radius:9px; box-shadow:0 1px .5px rgba(0,0,0,.13); background:#fff; white-space:pre-wrap; word-wrap:break-word; }
+  .msg.me { align-self:flex-end; background:#dcf8c6; }
+  .msg.bot { align-self:flex-start; white-space:normal; }
+  .msg time { display:block; text-align:right; font-size:11px; color:#667; margin-top:2px; }
+  .card { border:1px solid #dde; border-left:4px solid var(--mid); border-radius:6px; padding:7px 9px; margin:6px 0; background:#fafbfb; }
+  .card.bad { border-left-color:var(--err); background:#fff6f6; }
+  .card h4 { margin:0 0 4px; font-size:12.5px; letter-spacing:.04em; color:var(--dark); }
+  .card.bad h4 { color:var(--err); }
+  .card table { border-collapse:collapse; font-size:13.5px; } .card td { padding:1px 10px 1px 0; vertical-align:top; } .card td:first-child { color:#667; white-space:nowrap; }
+  .card ul { margin:4px 0 0; padding-left:18px; color:var(--err); font-size:13.5px; }
+  .btns { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+  .ok { color:var(--ok); } .err { color:var(--err); }
+  .chatbar { display:flex; gap:8px; padding:8px 10px; background:#f0f0f0; align-items:flex-end; }
+  .chatbar textarea { flex:1; resize:none; border:0; border-radius:20px; padding:10px 15px; font:inherit; min-height:44px; max-height:40vh; outline:none; }
+  .chatbar .send { width:46px; height:46px; border-radius:50%; border:0; background:var(--mid); color:#fff; font-size:19px; cursor:pointer; flex:none; }
+  .chattop { display:flex; justify-content:flex-end; padding:6px 10px; background:#f7f7f7; border-bottom:1px solid #e3e3e3; }
+  dialog { border:0; border-radius:12px; padding:18px; width:min(560px, 94vw); box-shadow:0 10px 40px rgba(0,0,0,.3); }
+  dialog h3 { margin:0 0 8px; color:var(--dark); }
+  dialog textarea { width:100%; min-height:110px; font:13px/1.4 ui-monospace, Consolas, monospace; padding:8px; border:1px solid #ccc; border-radius:6px; }
+  dialog pre { background:#f4f6f6; border-radius:6px; padding:8px 10px; margin:4px 0 10px; font-size:13px; white-space:pre-wrap; }
+  dialog .row { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  dialog .tplrow { display:flex; justify-content:space-between; align-items:center; }
+</style>
+</head>
+<body>
+<header>
+  <div class="who">
+    <div class="avatar">OL</div>
+    <div><b>Order Logger</b><small id="fileStatus">No Excel file connected</small></div>
+  </div>
+  <div>
+    <button id="btnFile" class="primary">Open Excel file</button>
+    <button id="btnSettings">Shortcuts</button>
+  </div>
+</header>
+<nav>
+  <button data-tab="new" class="active">New delivery</button>
+  <button data-tab="ofd">Out for delivery <span class="badge" id="ofdCount">0</span></button>
+  <button data-tab="pay">Payments</button>
+  <button data-tab="chat">Chat</button>
+</nav>
+
+<!-- ============ NEW DELIVERY ============ -->
+<section class="tab active" id="tab-new">
+  <div class="panel">
+    <h2>1. Paste the "Out for delivery" message</h2>
+    <p class="hint">The details fill in the form below automatically. The OTP is ignored, and the pin code picks the saved address.</p>
+    <textarea class="paste" id="pasteBox" placeholder="TODAY OUT FOR DELIVERY&#10;▪ Parcel Name👉🏻 ...&#10;▪ Model Name👉🏻 ...&#10;▪ Tracking👉🏻 ...&#10;▪ Quantity 👉🏻 ...&#10;▪ OTP👉🏻 ...&#10;▪ Phone No 👉🏻 ...&#10;▪ Pin Code 👉🏻 ..."></textarea>
+    <div id="pasteNote"></div>
+  </div>
+  <div class="panel">
+    <h2>2. Fill in the rest</h2>
+    <p class="hint">Click a box to pick from past entries, or type something new. New values are remembered.</p>
+    <div class="grid" id="orderForm"></div>
+    <div class="actions">
+      <button class="btn" id="btnAddOrder">Add to Excel</button>
+      <button class="btn ghost" id="btnClearOrder">Clear form</button>
+    </div>
+    <div id="orderNote"></div>
+  </div>
+</section>
+
+<!-- ============ OUT FOR DELIVERY ============ -->
+<section class="tab" id="tab-ofd">
+  <div class="panel">
+    <h2>Out for delivery</h2>
+    <p class="hint">Orders whose status is "Out for Delivery" in your sheet. Press Delivered to set the status and delivery date.</p>
+    <div id="ofdList"><div class="empty">Open your Excel file to see the list.</div></div>
+    <div id="ofdNote"></div>
+  </div>
+</section>
+
+<!-- ============ PAYMENTS ============ -->
+<section class="tab" id="tab-pay">
+  <div class="panel">
+    <h2>Payment received</h2>
+    <p class="hint">Goes into the payment columns (Payment date, Sender, Bank, Got).</p>
+    <div class="grid" id="payForm"></div>
+    <div class="actions">
+      <button class="btn" id="btnAddPay">Add to Excel</button>
+      <button class="btn ghost" id="btnClearPay">Clear</button>
+    </div>
+    <div id="payNote"></div>
+  </div>
+</section>
+
+<!-- ============ CHAT ============ -->
+<section class="tab" id="tab-chat">
+  <div class="chattop"><button class="btn small ghost" id="btnTpl">Message formats</button></div>
+  <div id="chat"></div>
+  <div class="chatbar">
+    <textarea id="chatInput" rows="1" placeholder="Paste #ORDER / #PAYMENT / #UPDATE messages, then send (Ctrl+Enter)"></textarea>
+    <button class="send" id="chatSend" title="Send">&#10148;</button>
+  </div>
+</section>
+
+<datalist id="dl-empty"></datalist>
+<div id="datalists"></div>
+
+<dialog id="dlgDup">
+  <h3>Tracking ID already in the sheet</h3>
+  <div id="dupText"></div>
+  <div class="row">
+    <button class="btn ghost" data-v="cancel">Cancel</button>
+    <button class="btn ghost" data-v="new">Add as a new row</button>
+    <button class="btn" data-v="replace">Yes, replace earlier entry</button>
+  </div>
+</dialog>
+
+<dialog id="dlgTpl">
+  <h3>Chat message formats</h3>
+  <div id="tplList"></div>
+  <div class="row"><button class="btn ghost" data-close>Close</button></div>
+</dialog>
+
+<dialog id="dlgSettings">
+  <h3>Shortcuts</h3>
+  <p class="hint">One per line as <b>CODE = full text</b>. Saved only in this browser.</p>
+  <b>Address shortcuts</b>
+  <textarea id="setAddr" placeholder="LKO = Triveni Nagar First FRJ Colony, ..."></textarea>
+  <b>Platform shortcuts</b>
+  <textarea id="setPlat" style="min-height:70px"></textarea>
+  <div class="row"><button class="btn ghost" data-close>Cancel</button><button class="btn" id="saveSettings">Save</button></div>
+</dialog>
+
+<input type="file" id="fileInput" accept=".xlsx" hidden>
+
+<script>
+"use strict";
+/* ======================= CONFIG (matches your sheet) ======================= */
+const FIRST_DATA_ROW = 3;
+const ORDER_COLS = {
+  date:"A", by:"B", platform:"C", name:"D", mobile:"E", model:"F", qty:"G", address:"H",
+  tracking:"I", status:"J", delivery_date:"K", card:"L", paid_by:"M", amount:"N",
+  cashback:"P", bulk_extra:"Q", return:"R", commission_cut:"S"
+};
+const COMMISSION_COL = "O";
+const PAYMENT_COLS = { date:"V", sender:"W", bank:"X", amount:"Y" };
+const OFD = "Out for Delivery";
+const DELIVERED = "Delivered";
+
+const ORDER_FIELDS = [   // [key, label, type, required]
+  ["date", "Order date", "date", true], ["by", "Order placed by", "text", true], ["platform", "Platform", "text", true],
+  ["name", "Parcel name", "text", true], ["mobile", "Mobile no", "text"], ["model", "Model", "text", true],
+  ["qty", "Quantity", "number"], ["pin", "Pin code", "text"], ["address", "Address", "text", false, true],
+  ["tracking", "Tracking ID", "text"], ["status", "Delivery status", "text"], ["delivery_date", "Delivery date", "date"],
+  ["card", "Card details", "text"], ["paid_by", "Amount paid by", "text"], ["amount", "Amount", "number", true],
+  ["cashback", "Cashback", "number"], ["bulk_extra", "Bulk extra", "number"], ["return", "Return amount", "number"],
+  ["commission_cut", "Commission cut", "number"]
+];
+const PAY_FIELDS = [["date", "Payment date", "date", true], ["sender", "Sender", "text", true], ["bank", "Bank", "text", true], ["amount", "Amount got", "number", true]];
+const NO_LIST = new Set(["date", "delivery_date", "qty", "pin", "tracking", "mobile"]);
+const DEFAULT_LISTS = { status: [OFD, DELIVERED, "Ordered", "Returned", "Cancelled"], platform: ["Flipkart", "Amazon"] };
+
+const LABELS = Object.fromEntries([...ORDER_FIELDS, ["sender","Sender"], ["bank","Bank"]].map(f => [f[0], f[1]]));
+LABELS.amount = "Amount";
+const ALIASES = {
+  date:"date", orderdate:"date", paymentdate:"date", by:"by", placedby:"by", orderplacedby:"by",
+  platform:"platform", site:"platform", name:"name", parcelname:"name", nameofparcel:"name", nameofpercel:"name",
+  mobile:"mobile", mobileno:"mobile", phone:"mobile", phoneno:"mobile", mob:"mobile",
+  model:"model", modelname:"model", product:"model", item:"model", qty:"qty", quantity:"qty",
+  address:"address", addr:"address", tracking:"tracking", trackingid:"tracking", trackingno:"tracking", tid:"tracking", orderid:"tracking",
+  status:"status", deliverystatus:"status", deliverydate:"delivery_date", delivered:"delivery_date", deliveredon:"delivery_date",
+  card:"card", carddetails:"card", paidby:"paid_by", amountpaidby:"paid_by", ammountpaidby:"paid_by",
+  amount:"amount", ammount:"amount", price:"amount", cashback:"cashback", bulkextra:"bulk_extra",
+  return:"return", returnamount:"return", returnammount:"return",
+  commissioncut:"commission_cut", comissioncut:"commission_cut", cut:"commission_cut",
+  sender:"sender", from:"sender", bank:"bank", receivedin:"bank", account:"bank",
+  pincode:"pin", pin:"pin", otp:"otp"
+};
+const NUMBER_FIELDS = new Set(["qty","amount","cashback","bulk_extra","return","commission_cut","mobile"]);
+const DATE_FIELDS = new Set(["date","delivery_date"]);
+const DEFAULT_PLATFORMS = "FK = Flipkart\nAMZ = Amazon";
+
+/* ======================= small helpers ======================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const fmtDate = d => d instanceof Date ? d.toLocaleDateString("en-GB") : d;
+const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function today() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const fromIso = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const serialToDate = v => { const n = Number(v); if (!isFinite(n) || n < 20000) return null; const u = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); };
+function parseDate(text) {
+  const t = text.trim().toLowerCase();
+  if (t === "today") return today();
+  if (t === "yesterday") { const d = today(); d.setDate(d.getDate() - 1); return d; }
+  let m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/);
+  if (m) return mk(+m[1], +m[2] - 1, m[3]);
+  m = t.match(/^(\d{1,2})[\s\/\-]*([a-z]{3})[a-z]*[\s\/\-,]*(\d{2,4})?$/);
+  if (m && m[2] in MONTHS) return mk(+m[1], MONTHS[m[2]], m[3]);
+  throw new Error(`can't read date "${text}" (use DD/MM/YY)`);
+  function mk(d, mo, y) {
+    let yr = y ? +y : new Date().getFullYear(); if (yr < 100) yr += 2000;
+    const dt = new Date(yr, mo, d);
+    if (dt.getMonth() !== mo || dt.getDate() !== d) throw new Error(`"${text}" is not a real date`);
+    return dt;
+  }
+}
+function parseNumber(text) {
+  const t = String(text).replace(/rs\.?|inr|₹|,|\s|\/-/gi, "");
+  if (!/^-?\d+(\.\d+)?$/.test(t)) throw new Error(`"${text}" is not a number`);
+  return Number(t);
+}
+const normKey = k => k.toLowerCase().replace(/[^a-z]/g, "");
+function guessPlatform(tracking) {
+  const t = String(tracking || "").trim().toUpperCase();
+  if (/^(FMP|SF\d|OD\d)/.test(t)) return "Flipkart";
+  if (/^\d{12}$/.test(t) || /^\d{3}-\d{7}-\d{7}$/.test(t)) return "Amazon";
+  return "";
+}
+
+/* ======================= shortcuts + remembered entries ======================= */
+function loadMap(key, fallback) {
+  let txt = fallback;
+  try { const v = localStorage.getItem(key); if (v !== null) txt = v; } catch (e) {}
+  const map = {};
+  for (const line of txt.split("\n")) { const i = line.indexOf("="); if (i > 0) map[line.slice(0, i).trim().toUpperCase()] = line.slice(i + 1).trim(); }
+  return { txt, map };
+}
+let addrMap = loadMap("ol_addr", "").map, platMap = loadMap("ol_plat", DEFAULT_PLATFORMS).map;
+let hist = {};
+try { hist = JSON.parse(localStorage.getItem("ol_hist") || "{}"); } catch (e) {}
+function remember(prefix, data) {
+  for (const [k, v] of Object.entries(data)) {
+    if ((NO_LIST.has(k) && k !== "mobile") || v === null || v === undefined || v === "" || v instanceof Date) continue;
+    const key = prefix + k, list = (hist[key] || []).filter(x => x !== String(v));
+    list.unshift(String(v)); hist[key] = list.slice(0, 300);
+  }
+  try { localStorage.setItem("ol_hist", JSON.stringify(hist)); } catch (e) {}
+}
+
+/* learned from the sheet each time it is read */
+let learned = { lists: {}, pinAddr: {}, paidByFor: {}, paidByForCard: {}, tracking: {}, ofd: [], mobiles: [] };
+
+/* ======================= minimal .xlsx (zip + xml) editor ======================= */
+const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+async function pipe(bytes, ts) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(ts)).arrayBuffer()); }
+
+function readZip(buf) {
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let e = buf.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error("This doesn't look like an .xlsx file.");
+  const count = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+  const entries = [];
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("The Excel file seems damaged.");
+    const nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
+    const lo = dv.getUint32(p + 42, true), csize = dv.getUint32(p + 20, true);
+    const start = lo + 30 + dv.getUint16(lo + 26, true) + dv.getUint16(lo + 28, true);
+    entries.push({
+      name: new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nl)),
+      flags: dv.getUint16(p + 8, true), method: dv.getUint16(p + 10, true),
+      time: dv.getUint16(p + 12, true), date: dv.getUint16(p + 14, true),
+      crc: dv.getUint32(p + 16, true), csize, usize: dv.getUint32(p + 24, true),
+      data: buf.subarray(start, start + csize)
+    });
+    p += 46 + nl + el + cl;
+  }
+  return entries;
+}
+async function zipText(entry) {
+  const raw = entry.method === 0 ? entry.data : await pipe(entry.data, new DecompressionStream("deflate-raw"));
+  return new TextDecoder().decode(raw);
+}
+async function zipSetText(entry, text) {
+  const raw = new TextEncoder().encode(text);
+  entry.data = await pipe(raw, new CompressionStream("deflate-raw"));
+  Object.assign(entry, { method: 8, crc: crc32(raw), csize: entry.data.length, usize: raw.length });
+}
+function writeZip(entries) {
+  const enc = new TextEncoder(); const parts = []; const central = []; let off = 0;
+  for (const en of entries) {
+    const name = enc.encode(en.name), flags = en.flags & ~8;
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, flags, true); h.setUint16(8, en.method, true);
+    h.setUint16(10, en.time, true); h.setUint16(12, en.date, true); h.setUint32(14, en.crc, true);
+    h.setUint32(18, en.csize, true); h.setUint32(22, en.usize, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+    parts.push(new Uint8Array(h.buffer), name, en.data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, flags, true);
+    c.setUint16(10, en.method, true); c.setUint16(12, en.time, true); c.setUint16(14, en.date, true); c.setUint32(16, en.crc, true);
+    c.setUint32(20, en.csize, true); c.setUint32(24, en.usize, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
+    central.push(new Uint8Array(c.buffer), name);
+    off += 30 + name.length + en.data.length;
+  }
+  const cdSize = central.reduce((s, a) => s + a.length, 0);
+  const eocd = new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0, 0x06054b50, true); eocd.setUint16(8, entries.length, true); eocd.setUint16(10, entries.length, true);
+  eocd.setUint32(12, cdSize, true); eocd.setUint32(16, off, true);
+  const all = [...parts, ...central, new Uint8Array(eocd.buffer)];
+  const out = new Uint8Array(all.reduce((s, a) => s + a.length, 0)); let q = 0;
+  for (const a of all) { out.set(a, q); q += a.length; }
+  return out;
+}
+
+const colNum = L => [...L].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+const colOf = ref => ref.replace(/\d+/g, "");
+const xmlDoc = s => { const d = new DOMParser().parseFromString(s, "application/xml"); if (d.getElementsByTagName("parsererror").length) throw new Error("Couldn't read the sheet XML."); return d; };
+const xmlOut = d => { let s = new XMLSerializer().serializeToString(d); if (!s.startsWith("<?xml")) s = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s; return s; };
+
+class Sheet {
+  constructor(doc, sst) {
+    this.doc = doc; this.sst = sst;
+    this.sd = doc.getElementsByTagNameNS(NS, "sheetData")[0];
+    this.rows = new Map();
+    for (const r of this.sd.children) if (r.localName === "row") this.rows.set(+r.getAttribute("r"), r);
+  }
+  el(n) { return this.doc.createElementNS(NS, n); }
+  getRow(n, create, templateRow) {
+    let row = this.rows.get(n);
+    if (row || !create) return row || null;
+    row = this.el("row");
+    const tpl = templateRow && this.rows.get(templateRow);
+    if (tpl) for (const a of tpl.attributes) if (a.name !== "r") row.setAttribute(a.name, a.value);
+    row.setAttribute("r", n);
+    const next = [...this.rows.keys()].filter(k => k > n).sort((a, b) => a - b)[0];
+    this.sd.insertBefore(row, next ? this.rows.get(next) : null);
+    this.rows.set(n, row);
+    return row;
+  }
+  cell(n, col, create, templateRow) {
+    const row = this.getRow(n, create, templateRow); if (!row) return null;
+    const want = colNum(col);
+    for (const c of row.children) {
+      if (c.localName !== "c") continue;
+      const have = colNum(colOf(c.getAttribute("r")));
+      if (have === want) return c;
+      if (have > want) { if (!create) return null; const nc = this.el("c"); nc.setAttribute("r", col + n); row.insertBefore(nc, c); return nc; }
+    }
+    if (!create) return null;
+    const nc = this.el("c"); nc.setAttribute("r", col + n); row.appendChild(nc); return nc;
+  }
+  value(n, col) {
+    const c = this.cell(n, col, false); if (!c) return null;
+    const t = c.getAttribute("t"), get = tag => { const e = c.getElementsByTagNameNS(NS, tag)[0]; return e ? e.textContent : null; };
+    const v = get("v");
+    if (t === "s") return v === null ? null : this.sst[+v];
+    if (t === "inlineStr") return [...c.getElementsByTagNameNS(NS, "t")].map(e => e.textContent).join("");
+    if (v !== null) return v;
+    const f = get("f"); return f !== null ? "=" + f : null;
+  }
+  lastRow(cols) {
+    const nums = [...this.rows.keys()].sort((a, b) => b - a);
+    for (const n of nums) {
+      if (n < FIRST_DATA_ROW) break;
+      if (cols.some(c => { const v = this.value(n, c); return v !== null && String(v).trim() !== ""; })) return n;
+    }
+    return FIRST_DATA_ROW - 1;
+  }
+  set(n, col, val, styleRow) {
+    const c = this.cell(n, col, true, styleRow);
+    if (styleRow >= FIRST_DATA_ROW) {
+      const sc = this.cell(styleRow, col, false);
+      if (sc && sc.getAttribute("s")) c.setAttribute("s", sc.getAttribute("s"));
+    }
+    while (c.firstChild) c.removeChild(c.firstChild);
+    c.removeAttribute("t");
+    if (val === null || val === undefined || val === "") return;
+    if (val instanceof Date) val = (Date.UTC(val.getFullYear(), val.getMonth(), val.getDate()) - Date.UTC(1899, 11, 30)) / 86400000;
+    if (typeof val === "number") { const v = this.el("v"); v.textContent = String(val); c.appendChild(v); }
+    else if (val.startsWith("=")) { const f = this.el("f"); f.textContent = val.slice(1); c.appendChild(f); }
+    else {
+      c.setAttribute("t", "inlineStr");
+      const is = this.el("is"), t = this.el("t");
+      t.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
+      t.textContent = val; is.appendChild(t); c.appendChild(is);
+    }
+  }
+  findTracking(id) {
+    const want = String(id).trim().toUpperCase(), hits = [];
+    for (const n of this.rows.keys()) {
+      if (n < FIRST_DATA_ROW) continue;
+      const v = this.value(n, ORDER_COLS.tracking);
+      if (v !== null && String(v).trim().toUpperCase() === want) hits.push(n);
+    }
+    return hits;
+  }
+  fixDimension() {
+    const dim = this.doc.getElementsByTagNameNS(NS, "dimension")[0]; if (!dim) return;
+    const max = Math.max(...this.rows.keys());
+    const m = (dim.getAttribute("ref") || "").match(/^([A-Z]+\d+):([A-Z]+)(\d+)$/);
+    if (m && max > +m[3]) dim.setAttribute("ref", `${m[1]}:${m[2]}${max}`);
+  }
+}
+
+
+
+async function openWorkbook(bytes) {
+  const entries = readZip(bytes);
+  const get = name => entries.find(e => e.name === name);
+  const wbEntry = get("xl/workbook.xml"), relsEntry = get("xl/_rels/workbook.xml.rels");
+  if (!wbEntry || !relsEntry) throw new Error("This doesn't look like an Excel workbook.");
+  const wb = xmlDoc(await zipText(wbEntry)), rels = xmlDoc(await zipText(relsEntry));
+  const first = wb.getElementsByTagNameNS(NS, "sheet")[0];
+  const rid = first.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
+  const rel = [...rels.getElementsByTagName("Relationship")].find(r => r.getAttribute("Id") === rid);
+  let target = rel.getAttribute("Target"); target = target.startsWith("/") ? target.slice(1) : "xl/" + target;
+  const sheetEntry = get(target), sstEntry = get("xl/sharedStrings.xml"); let sst = [];
+  if (sstEntry) {
+    const d = xmlDoc(await zipText(sstEntry));
+    sst = [...d.getElementsByTagNameNS(NS, "si")].map(si => [...si.getElementsByTagNameNS(NS, "t")].map(t => t.textContent).join(""));
+  }
+  return { entries, wb, wbEntry, sheetEntry, sheet: new Sheet(xmlDoc(await zipText(sheetEntry)), sst) };
+}
+async function saveWorkbook(book) {
+  book.sheet.fixDimension();
+  await zipSetText(book.sheetEntry, xmlOut(book.sheet.doc));
+  let calc = book.wb.getElementsByTagNameNS(NS, "calcPr")[0];
+  if (!calc) { calc = book.wb.createElementNS(NS, "calcPr"); book.wb.documentElement.appendChild(calc); }
+  calc.setAttribute("fullCalcOnLoad", "1");
+  await zipSetText(book.wbEntry, xmlOut(book.wb));
+  return writeZip(book.entries);
+}
+
+/* read everything useful out of the sheet: dropdown lists, pin -> address, out-for-delivery list */
+function learn(sh) {
+  const L = { lists: {}, pinAddr: {}, paidByFor: {}, paidByForCard: {}, tracking: {}, ofd: [], mobiles: [] };
+  const nums = [...sh.rows.keys()].filter(n => n >= FIRST_DATA_ROW).sort((a, b) => a - b);
+  const add = (key, v) => { if (v === null || String(v).trim() === "") return; (L.lists[key] = L.lists[key] || []).push(String(v).trim()); };
+  for (const n of nums) {
+    const r = {}; for (const [f, c] of Object.entries(ORDER_COLS)) r[f] = sh.value(n, c);
+    for (const f of Object.keys(ORDER_COLS)) if (!NO_LIST.has(f)) add("o." + f, r[f]);
+    add("p.sender", sh.value(n, PAYMENT_COLS.sender)); add("p.bank", sh.value(n, PAYMENT_COLS.bank)); add("p.amount", sh.value(n, PAYMENT_COLS.amount));
+    if (r.address) { const pins = String(r.address).match(/\b\d{6}\b/g); if (pins) L.pinAddr[pins[pins.length - 1]] = String(r.address).trim(); }
+    if (r.mobile && /^\d{10}$/.test(String(r.mobile).trim())) L.mobiles.unshift({ num: String(r.mobile).trim(), name: String(r.name || "").trim() });
+    if (r.by && r.paid_by) L.paidByFor[String(r.by).trim()] = String(r.paid_by).trim();
+    if (r.card && r.paid_by) L.paidByForCard[String(r.card).trim()] = String(r.paid_by).trim();
+    if (r.tracking) {
+      const t = String(r.tracking).trim().toUpperCase();
+      (L.tracking[t] = L.tracking[t] || []).push({ row: n, date: serialToDate(r.date), status: r.status, name: r.name });
+    }
+    if (r.status && String(r.status).trim().toLowerCase() === OFD.toLowerCase())
+      L.ofd.push({ row: n, date: serialToDate(r.date), name: r.name, model: r.model, tracking: r.tracking, qty: r.qty, address: r.address });
+  }
+  for (const k of Object.keys(L.lists)) L.lists[k] = [...new Set(L.lists[k].reverse())];   // most recent first, unique
+  learned = L;
+  refreshDatalists(); renderOfd();
+}
+
+/* operations on the sheet */
+function writeOrder(sh, d, replaceRow) {
+  const row = replaceRow || sh.lastRow(Object.values(ORDER_COLS)) + 1;
+  const styleRow = replaceRow || row - 1;
+  for (const [f, col] of Object.entries(ORDER_COLS)) sh.set(row, col, f in d ? d[f] : null, styleRow);
+  sh.set(row, COMMISSION_COL, `=SUM(R${row}-N${row})`, styleRow);
+  return row;
+}
+function writePayment(sh, d) {
+  const last = sh.lastRow(Object.values(PAYMENT_COLS)), row = last + 1;
+  for (const [f, col] of Object.entries(PAYMENT_COLS)) sh.set(row, col, f in d ? d[f] : null, last);
+  return row;
+}
+function updateRow(sh, row, d) {
+  const changes = [];
+  for (const [f, v] of Object.entries(d)) {
+    if (f === "tracking" || !(f in ORDER_COLS)) continue;
+    const c = sh.cell(row, ORDER_COLS[f], true), keep = c.getAttribute("s");
+    sh.set(row, ORDER_COLS[f], v, row > FIRST_DATA_ROW ? row - 1 : 0);
+    if (keep) c.setAttribute("s", keep);
+    changes.push(`${LABELS[f] || f} = ${fmtDate(v)}`);
+  }
+  return changes;
+}
+
+/* ======================= file handling ======================= */
+const canSaveInPlace = "showOpenFilePicker" in window;
+let handle = null, memBytes = null, memName = "", connected = false;
+const idb = (() => {
+  const open = () => new Promise((res, rej) => { const r = indexedDB.open("order-logger", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+  return {
+    async get(k) { const db = await open(); return new Promise(res => { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); },
+    async set(k, v) { const db = await open(); return new Promise(res => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = res; t.onerror = res; }); }
+  };
+})();
+const setStatus = t => $("fileStatus").textContent = t;
+async function hasPermission(ask) {
+  if (!handle) return false;
+  const o = { mode: "readwrite" };
+  if (await handle.queryPermission(o) === "granted") return true;
+  return ask ? (await handle.requestPermission(o)) === "granted" : false;
+}
+async function currentBytes() {
+  if (handle) {
+    if (!(await hasPermission(true))) throw new Error("Permission to edit the file was not given. Press the button at the top again.");
+    return new Uint8Array(await (await handle.getFile()).arrayBuffer());
+  }
+  if (memBytes) return memBytes;
+  throw new Error("Open your Excel file first (button at the top right).");
+}
+async function writeBytes(out) {
+  if (handle) {
+    try { const w = await handle.createWritable(); await w.write(out); await w.close(); }
+    catch (e) { throw new Error("Couldn't save. If the file is open in Excel, close it and try again."); }
+    return handle.name;
+  }
+  memBytes = out;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+  a.download = memName; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  return memName + " (downloaded)";
+}
+/* read latest file -> run fn on the sheet -> save if fn says so -> relearn */
+async function withSheet(fn) {
+  const book = await openWorkbook(await currentBytes());
+  const res = await fn(book.sheet);
+  if (res && res.save) res.where = await writeBytes(await saveWorkbook(book));
+  learn(book.sheet);
+  return res || {};
+}
+async function connected_(name, how) {
+  connected = true;
+  setStatus(`Connected: ${name}${how}`);
+  $("btnFile").textContent = "Change file";
+  await withSheet(() => null);
+}
+let reconnectPending = false;
+$("btnFile").addEventListener("click", async () => {
+  try {
+    if (reconnectPending && handle) {
+      if (await hasPermission(true)) { reconnectPending = false; await connected_(handle.name, " (saves directly)"); }
+      return;
+    }
+    if (canSaveInPlace) {
+      let h; try { [h] = await window.showOpenFilePicker({ types: [{ description: "Excel", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }] }); } catch (e) { return; }
+      handle = h; reconnectPending = false;
+      if (!(await hasPermission(true))) { setStatus("Permission not given"); return; }
+      await idb.set("handle", handle);
+      await connected_(handle.name, " (saves directly)");
+    } else $("fileInput").click();
+  } catch (e) { setStatus("Error: " + e.message); }
+});
+$("fileInput").addEventListener("change", async e => {
+  const f = e.target.files[0]; if (!f) return;
+  memBytes = new Uint8Array(await f.arrayBuffer()); memName = f.name;
+  try { await connected_(memName, " (updated copy downloads after each add)"); } catch (err) { setStatus("Error: " + err.message); memBytes = null; }
+});
+
+/* ======================= forms ======================= */
+function buildForm(container, fields, prefix) {
+  $(container).innerHTML = fields.map(([k, label, type, req, wide]) =>
+    `<div class="field${wide ? " wide" : ""}" id="f-${prefix}${k}"><label class="${req ? "req" : ""}" for="${prefix}${k}">${label}</label>
+     <input id="${prefix}${k}" type="${type === "date" ? "date" : "text"}" ${type === "number" ? 'inputmode="decimal"' : ""} ${NO_LIST.has(k) ? "" : `list="dl-${prefix}${k}"`} autocomplete="off">
+     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}</div>`).join("");
+}
+buildForm("orderForm", ORDER_FIELDS, "o.");
+buildForm("payForm", PAY_FIELDS, "p.");
+const field = (prefix, k) => document.getElementById(prefix + k);
+
+function refreshDatalists() {
+  const keys = [...ORDER_FIELDS.map(f => "o." + f[0]), ...PAY_FIELDS.map(f => "p." + f[0])].filter(k => !NO_LIST.has(k.slice(2)));
+  $("datalists").innerHTML = keys.map(key => {
+    const f = key.slice(2), vals = [...new Set([...(hist[key] || []), ...(learned.lists[key] || []), ...(DEFAULT_LISTS[f] || [])])];
+    return `<datalist id="dl-${key}">${vals.slice(0, 400).map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
+  }).join("");
+}
+
+function resetOrderForm() {
+  for (const [k] of ORDER_FIELDS) { unlockField(k); field("o.", k).value = ""; field("o.", k).placeholder = ""; $("f-o." + k).classList.remove("filled"); }
+  field("o.", "date").value = isoDate(today());
+  field("o.", "status").value = OFD;
+  field("o.", "qty").value = "1";
+  $("pasteNote").innerHTML = "";
+}
+function resetPayForm() { for (const [k] of PAY_FIELDS) field("p.", k).value = ""; field("p.", "date").value = isoDate(today()); }
+resetOrderForm(); resetPayForm(); refreshDatalists();
+
+function setField(k, v, mark = true, lock = false) {
+  if (v === undefined || v === null || v === "") return;
+  field("o.", k).value = v;
+  if (mark) $("f-o." + k).classList.add("filled");
+  if (lock) lockField(k);
+}
+function lockField(k) {
+  const box = $("f-o." + k), inp = field("o.", k);
+  inp.readOnly = true; box.classList.add("locked");
+  if (!box.querySelector(".lock")) box.querySelector("label").insertAdjacentHTML("beforeend", `<span class="lock">🔒 from message · <a data-unlock="${k}">edit</a></span>`);
+}
+function unlockField(k) {
+  const box = $("f-o." + k), inp = field("o.", k);
+  inp.readOnly = false; box.classList.remove("locked");
+  const l = box.querySelector(".lock"); if (l) l.remove();
+}
+$("orderForm").addEventListener("click", e => { const k = e.target.dataset.unlock; if (k) { unlockField(k); field("o.", k).focus(); } });
+
+/* last 4 digits -> full mobile number from earlier records */
+function resolveMobile(raw, name) {
+  let d = String(raw || "").replace(/\D/g, "");
+  if (d.length === 12 && d.startsWith("91")) d = d.slice(2);
+  if (d.length === 11 && d.startsWith("0")) d = d.slice(1);
+  if (d.length === 10) return { full: d };
+  if (d.length < 3 || d.length > 6) return { none: true, digits: d };
+  const all = [...learned.mobiles, ...(hist["o.mobile"] || []).map(num => ({ num: String(num), name: "" }))];
+  const byNum = new Map();
+  for (const m of all) if (m.num.endsWith(d)) { const e = byNum.get(m.num) || { num: m.num, names: new Set() }; if (m.name) e.names.add(m.name); byNum.set(m.num, e); }
+  const cands = [...byNum.values()];
+  if (cands.length === 1) return { full: cands[0].num, from: d };
+  const nm = String(name || "").trim().toLowerCase();
+  const sameName = cands.filter(c => [...c.names].some(n => n.toLowerCase() === nm));
+  if (nm && sameName.length === 1) return { full: sameName[0].num, from: d };
+  if (cands.length) return { choices: cands.map(c => ({ num: c.num, names: [...c.names] })), digits: d };
+  return { none: true, digits: d };
+}
+function mobileNote(res) {
+  if (res.full) return res.from ? { kind: "ok", html: `📱 Last 4 digits ${esc(res.from)} matched <b>${esc(res.full)}</b>.` } : null;
+  if (res.choices) return { kind: "warn", html: `📱 More than one saved number ends in ${esc(res.digits)}. Pick one: ` +
+      res.choices.map(c => `<button class="btn small ghost pick" data-mobile="${c.num}">${c.num}${c.names.length ? " (" + esc(c.names.slice(0, 2).join(", ")) + ")" : ""}</button>`).join("") };
+  if (res.digits) return { kind: "warn", html: `📱 No saved number ends in ${esc(res.digits)}. Type the full 10-digit number in Mobile no.` };
+  return null;
+}
+function fillMobile(raw, fromMessage) {
+  const res = resolveMobile(raw, field("o.", "name").value);
+  if (res.full) setField("mobile", res.full, true, fromMessage);
+  else { field("o.", "mobile").value = ""; field("o.", "mobile").placeholder = res.digits ? `ends in ${res.digits}` : ""; }
+  return mobileNote(res);
+}
+$("pasteNote").addEventListener("click", e => {
+  const m = e.target.dataset.mobile; if (!m) return;
+  setField("mobile", m, true, true);
+  e.target.closest(".note").innerHTML = `📱 Mobile set to <b>${esc(m)}</b>.`;
+});
+field("o.", "mobile").addEventListener("change", () => {
+  const v = field("o.", "mobile").value, d = v.replace(/\D/g, "");
+  if (d.length >= 3 && d.length <= 6) { $("pasteNote").querySelectorAll(".note").forEach(x => { if (x.textContent.startsWith("📱")) x.remove(); }); const n = fillMobile(v, false); if (n) $("pasteNote").insertAdjacentHTML("beforeend", `<div class="note ${n.kind}">${n.html}</div>`); }
+});
+function applyPin() {
+  const pin = field("o.", "pin").value.trim();
+  if (!/^\d{6}$/.test(pin)) return "";
+  const fromShortcut = Object.values(addrMap).find(a => a.includes(pin));
+  const fromHist = (hist["o.address"] || []).find(a => a.includes(pin));
+  const addr = learned.pinAddr[pin] || fromHist || fromShortcut;
+  if (addr) { setField("address", addr); return ""; }
+  return `No saved address for pin ${pin} yet. Type it once and it will be remembered.`;
+}
+field("o.", "pin").addEventListener("change", () => { const w = applyPin(); if (w) note("pasteNote", "warn", w); });
+field("o.", "by").addEventListener("change", () => { const v = field("o.", "by").value.trim(); if (!field("o.", "paid_by").value && learned.paidByFor[v]) setField("paid_by", learned.paidByFor[v]); });
+field("o.", "card").addEventListener("change", () => { const v = field("o.", "card").value.trim(); if (!field("o.", "paid_by").value && learned.paidByForCard[v]) setField("paid_by", learned.paidByForCard[v]); });
+field("o.", "tracking").addEventListener("change", () => { trackingWarning(); if (!field("o.", "platform").value) setField("platform", guessPlatform(field("o.", "tracking").value)); });
+field("o.", "address").addEventListener("change", () => { const a = field("o.", "address"); if (addrMap[a.value.trim().toUpperCase()]) a.value = addrMap[a.value.trim().toUpperCase()]; });
+
+function note(id, kind, html) { $(id).innerHTML = html ? `<div class="note ${kind}">${html}</div>` : ""; }
+
+/* ---- parse the out-for-delivery message ---- */
+function parseOfdMessage(text) {
+  const out = {}, unknown = [];
+  const clean = text.replace(/[‎‏‪-‮⁦-⁩﻿]/g, "");
+  for (let line of clean.split(/\r?\n/)) {
+    line = line.replace(/^\[[^\]]*\]\s*[^:]+:\s*/, "");                  // copied WhatsApp header
+    const m = line.match(/^[\s▪•◾◼■▫*\-–]*([A-Za-z][A-Za-z .]*?)\s*(?:👉[\u{1F3FB}-\u{1F3FF}]?|➡️?|→|:|=|-)+\s*(.*)$/u);
+    if (!m) continue;
+    const key = ALIASES[normKey(m[1])], val = m[2].replace(/[👉➡️→]/gu, "").trim();
+    if (!key) { if (val) unknown.push(m[1].trim()); continue; }
+    if (key === "otp" || !val) continue;
+    out[key] = val;
+  }
+  return { data: out, unknown };
+}
+function trackingWarning(quiet) {
+  const t = field("o.", "tracking").value.trim().toUpperCase();
+  const hits = learned.tracking[t];
+  if (!t || !hits) return false;
+  const html = `⚠ Tracking <b>${esc(t)}</b> is already in the sheet: ` + hits.map(h => `row ${h.row} (${esc(h.name || "")}, order date ${fmtDate(h.date) || "-"}, ${esc(h.status || "no status")})`).join("; ") + `. You'll be asked what to do when you press Add.`;
+  if (!quiet) note("pasteNote", "warn", html);
+  return html;
+}
+$("pasteBox").addEventListener("input", () => {
+  const text = $("pasteBox").value; if (!text.trim()) return;
+  const { data, unknown } = parseOfdMessage(text);
+  if (!Object.keys(data).length) { note("pasteNote", "err", "Couldn't find Parcel Name, Model, Tracking etc. in that text."); return; }
+  for (const k of ["name", "model", "tracking", "qty", "mobile", "pin", "address"]) unlockField(k);
+  for (const k of ["name", "model", "tracking", "qty", "pin"]) if (data[k]) setField(k, k === "qty" ? data[k].replace(/\D/g, "") || "1" : data[k], true, true);
+  const notes = [];
+  if (data.mobile) { const n = fillMobile(data.mobile, true); if (n) notes.push(n); }
+  const w = applyPin(); if (w) notes.push({ kind: "warn", html: w }); else if (field("o.", "address").value && data.pin) lockField("address");
+  if (!field("o.", "platform").value) setField("platform", guessPlatform(data.tracking));
+  if (unknown.length) notes.push({ kind: "warn", html: `Ignored: ${unknown.map(esc).join(", ")}` });
+  const tw = trackingWarning(true); if (tw) notes.push({ kind: "warn", html: tw });
+  notes.unshift({ kind: "ok", html: "✔ Filled from the message. Locked boxes (🔒) came from the message; fill the rest." });
+  $("pasteNote").innerHTML = notes.map(n => `<div class="note ${n.kind}">${n.html}</div>`).join("");
+});
+
+function readForm(fields, prefix) {
+  const data = {}, problems = [];
+  for (const [k, label, type, req] of fields) {
+    if (k === "pin") continue;
+    const raw = field(prefix, k).value.trim();
+    if (!raw) { if (req) problems.push(`${label} is empty`); continue; }
+    try {
+      if (k === "mobile" && raw.replace(/\D/g, "").length !== 10) throw new Error("should be a full 10-digit number");
+      if (type === "date") data[k] = fromIso(raw);
+      else if (NUMBER_FIELDS.has(k)) data[k] = k === "mobile" && !/^\d+$/.test(raw.replace(/\s/g, "")) ? raw : parseNumber(raw);
+      else if (k === "platform") data[k] = platMap[raw.toUpperCase()] || raw;
+      else if (k === "address") data[k] = addrMap[raw.toUpperCase()] || raw;
+      else data[k] = raw;
+    } catch (e) { problems.push(`${label}: ${e.message}`); }
+  }
+  return { data, problems };
+}
+
+function askDuplicate(t, hits) {
+  return new Promise(res => {
+    $("dupText").innerHTML = `<p>Tracking <b>${esc(t)}</b> is already in the sheet:</p><ul>` +
+      hits.map(h => `<li>Row ${h.row}: ${esc(h.name || "")}, order date ${fmtDate(h.date) || "-"}, status ${esc(h.status || "-")}</li>`).join("") +
+      `</ul><p>If this parcel went out for delivery before but wasn't delivered, press <b>Yes</b> to replace the earlier entry with this one (row ${hits[hits.length - 1].row}). Payment columns on that row are not touched.</p>
+      <p class="hint">If it's a different item in the same shipment, choose <b>Add as a new row</b>.</p>`;
+    const dlg = $("dlgDup");
+    const onClick = e => { const v = e.target.dataset.v; if (!v) return; dlg.removeEventListener("click", onClick); dlg.close(); res(v); };
+    dlg.addEventListener("click", onClick);
+    dlg.addEventListener("cancel", () => res("cancel"), { once: true });
+    dlg.showModal();
+  });
+}
+
+$("btnAddOrder").addEventListener("click", async () => {
+  const { data, problems } = readForm(ORDER_FIELDS, "o.");
+  if (problems.length) { note("orderNote", "err", problems.map(esc).join("<br>")); return; }
+  $("btnAddOrder").disabled = true;
+  try {
+    const res = await withSheet(async sh => {
+      let replaceRow = null;
+      if (data.tracking) {
+        const t = String(data.tracking).toUpperCase();
+        const hits = sh.findTracking(t).map(row => ({ row, name: sh.value(row, ORDER_COLS.name), date: serialToDate(sh.value(row, ORDER_COLS.date)), status: sh.value(row, ORDER_COLS.status) }));
+        if (hits.length) {
+          const choice = await askDuplicate(t, hits);
+          if (choice === "cancel") return { cancelled: true };
+          if (choice === "replace") replaceRow = hits[hits.length - 1].row;
+        }
+      }
+      const row = writeOrder(sh, data, replaceRow);
+      return { save: true, row, replaced: !!replaceRow };
+    });
+    if (res.cancelled) { note("orderNote", "warn", "Nothing was added."); return; }
+    remember("o.", data); refreshDatalists();
+    note("orderNote", "ok", `✔ ${res.replaced ? "Replaced" : "Added"} row ${res.row}: ${esc(data.name)}, ${esc(data.model)}. Saved to ${esc(res.where)}.`);
+    $("pasteBox").value = ""; resetOrderForm();
+  } catch (e) { note("orderNote", "err", esc(e.message)); }
+  finally { $("btnAddOrder").disabled = false; }
+});
+$("btnClearOrder").addEventListener("click", () => { $("pasteBox").value = ""; resetOrderForm(); note("orderNote"); });
+
+$("btnAddPay").addEventListener("click", async () => {
+  const { data, problems } = readForm(PAY_FIELDS, "p.");
+  if (problems.length) { note("payNote", "err", problems.map(esc).join("<br>")); return; }
+  $("btnAddPay").disabled = true;
+  try {
+    const res = await withSheet(sh => ({ save: true, row: writePayment(sh, data) }));
+    remember("p.", data); refreshDatalists();
+    note("payNote", "ok", `✔ Added in row ${res.row}: ${esc(data.sender)} → ${esc(data.bank)}, ₹${data.amount}. Saved to ${esc(res.where)}.`);
+    resetPayForm();
+  } catch (e) { note("payNote", "err", esc(e.message)); }
+  finally { $("btnAddPay").disabled = false; }
+});
+$("btnClearPay").addEventListener("click", () => { resetPayForm(); note("payNote"); });
+
+/* ======================= out for delivery tab ======================= */
+function renderOfd() {
+  $("ofdCount").textContent = learned.ofd.length;
+  if (!connected) return;
+  if (!learned.ofd.length) { $("ofdList").innerHTML = `<div class="empty">Nothing is out for delivery right now.</div>`; return; }
+  $("ofdList").innerHTML = `<table class="list"><tr><th>Row</th><th>Order date</th><th>Parcel name</th><th>Model</th><th>Qty</th><th>Tracking</th><th>Delivered on</th><th></th></tr>` +
+    learned.ofd.map(o => `<tr><td>${o.row}</td><td>${fmtDate(o.date) || ""}</td><td>${esc(o.name || "")}</td><td>${esc(o.model || "")}</td><td>${esc(o.qty || "")}</td><td>${esc(o.tracking || "")}</td>
+      <td><input type="date" value="${isoDate(today())}" id="dd-${o.row}"></td>
+      <td><button class="btn small" data-row="${o.row}" data-tracking="${esc(o.tracking || "")}">Delivered</button></td></tr>`).join("") + `</table>`;
+}
+$("ofdList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-row]"); if (!b) return;
+  const row = +b.dataset.row, tracking = b.dataset.tracking, day = $("dd-" + row).value;
+  b.disabled = true;
+  try {
+    const res = await withSheet(sh => {
+      let r = row;
+      const cur = sh.value(r, ORDER_COLS.tracking);
+      if (String(cur || "").trim().toUpperCase() !== tracking.trim().toUpperCase()) {   // sheet changed since the list was drawn
+        const hits = sh.findTracking(tracking).filter(n => String(sh.value(n, ORDER_COLS.status) || "").toLowerCase() === OFD.toLowerCase());
+        if (hits.length !== 1) throw new Error(`Couldn't find tracking ${tracking} any more. Nothing changed.`);
+        r = hits[0];
+      }
+      updateRow(sh, r, { status: DELIVERED, delivery_date: day ? fromIso(day) : today() });
+      return { save: true, row: r };
+    });
+    note("ofdNote", "ok", `✔ Row ${res.row} marked Delivered. Saved to ${esc(res.where)}.`);
+  } catch (err) { note("ofdNote", "err", esc(err.message)); b.disabled = false; }
+});
+
+/* ======================= tabs ======================= */
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x === b));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.id === "tab-" + b.dataset.tab));
+}));
+
+/* ======================= chat tab (#ORDER / #PAYMENT / #UPDATE) ======================= */
+const TIME = String.raw`\d{1,2}:\d{2}(?::\d{2})?(?:[\s ]?[ap]\.?m\.?)?`;
+const DATE = String.raw`\d{1,2}\/\d{1,2}\/\d{2,4}`;
+const HEADERS = [
+  new RegExp(`^(${DATE}),?\\s+${TIME}\\s+-\\s+([^:]+):\\s?(.*)$`, "i"),
+  new RegExp(`^\\[(${DATE}),?\\s+${TIME}\\]\\s+([^:]+):\\s?(.*)$`, "i"),
+  new RegExp(`^\\[${TIME},\\s*(${DATE})\\]\\s+([^:]+):\\s?(.*)$`, "i"),
+];
+const TAG_RE = /^\s*#\s*(ORDER|PAYMENT|UPDATE)\b(.*)$/i;
+const REQUIRED = { ORDER: ["by","platform","name","model","amount"], PAYMENT: ["sender","bank","amount"], UPDATE: ["tracking"] };
+function splitMessages(raw) {
+  const lines = raw.replace(/[‎‏‪-‮⁦-⁩﻿]/g, "").split(/\r?\n/);
+  const msgs = []; let cur = null;
+  for (const line of lines) {
+    let hit = null; for (const re of HEADERS) { const m = line.match(re); if (m) { hit = m; break; } }
+    if (hit) { if (cur) msgs.push(cur); let d = null; try { d = parseDate(hit[1]); } catch (e) {} cur = { date: d, author: hit[2].trim(), text: hit[3] }; }
+    else if (cur) cur.text += "\n" + line; else cur = { date: null, author: "", text: line };
+  }
+  if (cur) msgs.push(cur);
+  return msgs;
+}
+function parseFields(lines) {
+  const raw = {}, problems = []; let last = null;
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const i = line.indexOf(":");
+    if (i > 0) { const key = ALIASES[normKey(line.slice(0, i))]; if (key && key !== "otp" && key !== "pin") { raw[key] = line.slice(i + 1).trim(); last = key; continue; } }
+    if (last === "address") raw.address = raw.address.replace(/[,\s]+$/, "") + ", " + line.trim();
+    else problems.push(`didn't understand line "${line.trim()}"`);
+  }
+  const data = {};
+  for (const [k, v] of Object.entries(raw)) {
+    if (v === "") continue;
+    try {
+      if (DATE_FIELDS.has(k)) data[k] = parseDate(v);
+      else if (NUMBER_FIELDS.has(k)) data[k] = parseNumber(v);
+      else if (k === "address") data[k] = addrMap[v.toUpperCase()] || v;
+      else if (k === "platform") data[k] = platMap[v.toUpperCase()] || v;
+      else data[k] = v;
+    } catch (e) { problems.push(`${LABELS[k] || k}: ${e.message}`); }
+  }
+  return { data, problems };
+}
+function splitBlocks(text) {
+  const blocks = []; let cur = null;
+  for (const line of text.split("\n")) {
+    const m = line.match(TAG_RE);
+    if (m) { if (cur) blocks.push(cur); cur = { kind: m[1].toUpperCase(), lines: m[2].trim() ? [m[2]] : [] }; }
+    else if (cur) cur.lines.push(line);
+  }
+  if (cur) blocks.push(cur);
+  return blocks;
+}
+function parsePaste(raw) {
+  const out = [];
+  for (const msg of splitMessages(raw)) for (const b of splitBlocks(msg.text)) {
+    const { data, problems } = parseFields(b.lines), fb = msg.date || today();
+    if (b.kind !== "UPDATE" && !("date" in data)) data.date = fb;
+    if (b.kind === "ORDER" && !("qty" in data)) data.qty = 1;
+    if (b.kind === "UPDATE" && /^delivered$/i.test(data.status || "") && !("delivery_date" in data)) data.delivery_date = fb;
+    for (const f of REQUIRED[b.kind]) if (!(f in data)) problems.push(`${LABELS[f]} is missing`);
+    out.push({ kind: b.kind, data, problems });
+  }
+  return out;
+}
+const chat = $("chat"), chatInput = $("chatInput");
+const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+function addMsg(cls, html) { const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html + `<time>${now()}</time>`; chat.appendChild(d); chat.scrollTop = chat.scrollHeight; return d; }
+const TITLES = { ORDER: "NEW ORDER", PAYMENT: "PAYMENT RECEIVED", UPDATE: "STATUS UPDATE" };
+function card(it) {
+  const bad = it.problems.length > 0;
+  return `<div class="card ${bad ? "bad" : ""}"><h4>${TITLES[it.kind]}${bad ? " · WILL BE SKIPPED" : ""}</h4><table>` +
+    Object.entries(it.data).map(([k, v]) => `<tr><td>${esc(LABELS[k] || k)}</td><td>${esc(fmtDate(v))}</td></tr>`).join("") +
+    `</table>${bad ? `<ul>${it.problems.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}</div>`;
+}
+function chatSend() {
+  const text = chatInput.value.trim(); if (!text) return;
+  addMsg("me", esc(text)); chatInput.value = "";
+  const items = parsePaste(text);
+  if (!items.length) { addMsg("bot", `I couldn't find any #ORDER, #PAYMENT or #UPDATE in that. For "Out for delivery" messages use the <b>New delivery</b> tab.`); return; }
+  const good = items.filter(i => !i.problems.length);
+  const m = addMsg("bot", `${items.map(card).join("")}<div class="btns">${good.length ? `<button class="btn small" data-act="add">Add ${good.length} to Excel</button>` : ""}<button class="btn small ghost" data-act="cancel">${good.length ? "Cancel" : "OK"}</button></div>`);
+  m.querySelector(".btns").addEventListener("click", async ev => {
+    const act = ev.target.dataset.act; if (!act) return;
+    const btns = m.querySelectorAll(".btns button"); btns.forEach(b => b.disabled = true);
+    if (act === "cancel") return;
+    try {
+      const res = await withSheet(sh => {
+        const results = [];
+        for (const it of good) {
+          const d = it.data;
+          if (it.kind === "ORDER") {
+            if (d.tracking && sh.findTracking(d.tracking).length) { results.push([false, `Order for ${d.name} skipped: tracking ${d.tracking} is already in the sheet. Use the New delivery tab to replace it.`]); continue; }
+            results.push([true, `Order added in row ${writeOrder(sh, d)}: ${d.name}, ${d.model}, ₹${d.amount}`]);
+          } else if (it.kind === "PAYMENT") results.push([true, `Payment added in row ${writePayment(sh, d)}: ${d.sender} → ${d.bank}, ₹${d.amount}`]);
+          else {
+            const hits = sh.findTracking(d.tracking);
+            if (hits.length !== 1) { results.push([false, `Update skipped: tracking ${d.tracking} found ${hits.length} times in the sheet.`]); continue; }
+            results.push([true, `Row ${hits[0]} updated (${d.tracking}): ${updateRow(sh, hits[0], d).join(", ")}`]);
+          }
+        }
+        for (const it of good) remember(it.kind === "PAYMENT" ? "p." : "o.", it.data);
+        return { save: results.some(r => r[0]), results };
+      });
+      addMsg("bot", res.results.map(([ok, t]) => `<div class="${ok ? "ok" : "err"}">${ok ? "✔" : "✖"} ${esc(t)}</div>`).join("") + (res.where ? `<div class="hint" style="margin:4px 0 0">Saved to ${esc(res.where)}</div>` : ""));
+    } catch (e) { addMsg("bot", `<span class="err">${esc(e.message)}</span>`); btns.forEach(b => b.disabled = false); }
+  });
+}
+chatInput.addEventListener("input", () => { chatInput.style.height = "auto"; chatInput.style.height = Math.min(chatInput.scrollHeight, innerHeight * .4) + "px"; });
+chatInput.addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); chatSend(); } });
+$("chatSend").addEventListener("click", chatSend);
+addMsg("bot", `Paste messages that start with <b>#ORDER</b>, <b>#PAYMENT</b> or <b>#UPDATE</b> here. Tap <b>Message formats</b> for templates.`);
+
+const TEMPLATES = {
+  "New order": "#ORDER\nBy: \nPlatform: FK\nName: \nMobile: \nModel: \nQty: 1\nAddress: \nTracking: \nCard: \nPaid By: \nAmount: \nReturn: \nCut: ",
+  "Payment received": "#PAYMENT\nSender: \nBank: \nAmount: ",
+  "Status update": "#UPDATE\nTracking: \nStatus: Delivered"
+};
+$("tplList").innerHTML = Object.entries(TEMPLATES).map(([k, v], i) => `<div class="tplrow"><b>${k}</b><button class="btn small" data-copy="${i}">Copy</button></div><pre>${esc(v)}</pre>`).join("");
+$("tplList").addEventListener("click", async e => {
+  const i = e.target.dataset.copy; if (i === undefined) return;
+  try { await navigator.clipboard.writeText(Object.values(TEMPLATES)[i]); e.target.textContent = "Copied"; setTimeout(() => e.target.textContent = "Copy", 1200); } catch (err) {}
+});
+$("btnTpl").addEventListener("click", () => $("dlgTpl").showModal());
+
+/* ======================= shortcuts dialog ======================= */
+$("btnSettings").addEventListener("click", () => {
+  $("setAddr").value = loadMap("ol_addr", "").txt; $("setPlat").value = loadMap("ol_plat", DEFAULT_PLATFORMS).txt;
+  $("dlgSettings").showModal();
+});
+$("saveSettings").addEventListener("click", () => {
+  try { localStorage.setItem("ol_addr", $("setAddr").value); localStorage.setItem("ol_plat", $("setPlat").value); } catch (e) {}
+  addrMap = loadMap("ol_addr", "").map; platMap = loadMap("ol_plat", DEFAULT_PLATFORMS).map;
+  $("dlgSettings").close();
+});
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+/* ======================= start: reconnect last file ======================= */
+(async () => {
+  if (!canSaveInPlace) return;
+  try {
+    const h = await idb.get("handle"); if (!h) return;
+    handle = h;
+    if (await hasPermission(false)) { await connected_(h.name, " (saves directly)"); return; }
+    reconnectPending = true;
+    setStatus(`Last file: ${h.name}`);
+    $("btnFile").textContent = "Reconnect " + h.name;
+  } catch (e) {}
+})();
+
+window.__test = {   // used for automated testing only
+  async load(bytes, name) { memBytes = bytes; memName = name; handle = null; await connected_(name, ""); },
+  bytes: () => memBytes, parseOfdMessage
+};
+</script>
+</body>
+</html>
