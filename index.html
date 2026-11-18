@@ -199,12 +199,15 @@ const ORDER_FIELDS = [   // [key, label, type, required]
   ["name", "Parcel name", "text", true], ["mobile", "Mobile no", "text"], ["model", "Model", "text", true],
   ["qty", "Quantity", "number"], ["pin", "Pin code", "text"], ["address", "Address", "text", false, true],
   ["tracking", "Tracking ID", "text"], ["status", "Delivery status", "text"], ["delivery_date", "Delivery date", "date"],
-  ["card", "Card details", "text"], ["paid_by", "Amount paid by", "text"], ["amount", "Amount", "number", true],
-  ["cashback", "Cashback", "number"], ["bulk_extra", "Bulk extra", "number"], ["return", "Return amount", "number"],
-  ["commission_cut", "Commission cut", "number"]
+  ["card", "Card details", "text"], ["paid_by", "Amount paid by", "text"],
+  ["amount", "Amount", "number", true], ["return", "Return amount", "number", true], ["commission", "Commission", "number"],
+  ["commission_cut", "Commission cut", "number"], ["have_to_return", "I have to return", "number"],
+  ["cashback", "Cashback", "number"], ["bulk_extra", "Bulk extra", "number"]
 ];
 const PAY_FIELDS = [["date", "Payment date", "date", true], ["sender", "Sender", "text", true], ["bank", "Bank", "text", true], ["amount", "Amount got", "number", true]];
-const NO_LIST = new Set(["date", "delivery_date", "qty", "pin", "tracking", "mobile"]);
+const NO_LIST = new Set(["date", "delivery_date", "qty", "pin", "tracking", "mobile", "commission", "have_to_return"]);
+const COMPUTED = new Set(["commission", "have_to_return"]);   // shown in the form, calculated by the sheet
+const HAVE_COL = "T";                                         // Total Have to Return = Amount + Commission cut
 const DEFAULT_LISTS = { status: [OFD, DELIVERED, "Ordered", "Returned", "Cancelled"], platform: ["Flipkart", "Amazon"] };
 
 const LABELS = Object.fromEntries([...ORDER_FIELDS, ["sender","Sender"], ["bank","Bank"]].map(f => [f[0], f[1]]));
@@ -502,6 +505,7 @@ function writeOrder(sh, d, replaceRow) {
   const styleRow = replaceRow || row - 1;
   for (const [f, col] of Object.entries(ORDER_COLS)) sh.set(row, col, f in d ? d[f] : null, styleRow);
   sh.set(row, COMMISSION_COL, `=SUM(R${row}-N${row})`, styleRow);
+  sh.set(row, HAVE_COL, `=SUM(N${row}+S${row})`, styleRow);
   return row;
 }
 function writePayment(sh, d) {
@@ -599,7 +603,7 @@ function buildForm(container, fields, prefix) {
   $(container).innerHTML = fields.map(([k, label, type, req, wide]) =>
     `<div class="field${wide ? " wide" : ""}" id="f-${prefix}${k}"><label class="${req ? "req" : ""}" for="${prefix}${k}">${label}</label>
      <input id="${prefix}${k}" type="${type === "date" ? "date" : "text"}" ${type === "number" ? 'inputmode="decimal"' : ""} ${NO_LIST.has(k) ? "" : `list="dl-${prefix}${k}"`} autocomplete="off">
-     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}</div>`).join("");
+     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}${k === "commission" ? '<small>Return − Amount. Type any two of the three</small>' : ""}${k === "have_to_return" ? '<small>Amount + Commission cut</small>' : ""}</div>`).join("");
 }
 buildForm("orderForm", ORDER_FIELDS, "o.");
 buildForm("payForm", PAY_FIELDS, "p.");
@@ -609,6 +613,8 @@ function refreshDatalists() {
   const keys = [...ORDER_FIELDS.map(f => "o." + f[0]), ...PAY_FIELDS.map(f => "p." + f[0])].filter(k => !NO_LIST.has(k.slice(2)));
   $("datalists").innerHTML = keys.map(key => {
     const f = key.slice(2), vals = [...new Set([...(hist[key] || []), ...(learned.lists[key] || []), ...(DEFAULT_LISTS[f] || [])])];
+    const allNum = vals.length && vals.every(v => /^-?\d+(\.\d+)?$/.test(v));
+    vals.sort(allNum ? (x, y) => x - y : (x, y) => x.localeCompare(y, undefined, { sensitivity: "base", numeric: true }));
     return `<datalist id="dl-${key}">${vals.slice(0, 400).map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
   }).join("");
 }
@@ -619,7 +625,35 @@ function resetOrderForm() {
   field("o.", "status").value = OFD;
   field("o.", "qty").value = "1";
   $("pasteNote").innerHTML = "";
+  trioOrder = [];
+  if (typeof updateTotals === "function") { field("o.", "have_to_return").readOnly = true; $("f-o.have_to_return").classList.add("locked"); }
 }
+/* Amount, Return amount, Commission: type any two, the third is calculated */
+const TRIO = ["amount", "return", "commission"];
+let trioOrder = [];
+const numOf = k => { const v = field("o.", k).value.replace(/[₹,\s]/g, ""); return v !== "" && isFinite(+v) ? +v : null; };
+const round2 = n => Math.round(n * 100) / 100;
+function updateTotals() {
+  const a = numOf("amount"), c = numOf("commission_cut");
+  field("o.", "have_to_return").value = a === null ? "" : round2(a + (c || 0));
+}
+function onTrioInput(k) {
+  trioOrder = trioOrder.filter(x => x !== k);
+  if (numOf(k) !== null) trioOrder.push(k);
+  if (numOf(k) !== null && trioOrder.length >= 2) {
+    const [x, y] = trioOrder.slice(-2), target = TRIO.find(t => t !== x && t !== y);
+    const a = numOf("amount"), r = numOf("return"), c = numOf("commission");
+    const v = target === "commission" ? r - a : target === "return" ? a + c : r - c;
+    field("o.", target).value = round2(v);
+    $("f-o." + target).classList.add("filled");
+    trioOrder = trioOrder.filter(t => t !== target);
+  }
+  updateTotals();
+}
+for (const k of TRIO) field("o.", k).addEventListener("input", () => onTrioInput(k));
+field("o.", "commission_cut").addEventListener("input", updateTotals);
+for (const k of COMPUTED) if (k === "have_to_return") { field("o.", k).readOnly = true; $("f-o." + k).classList.add("locked"); }
+
 function resetPayForm() { for (const [k] of PAY_FIELDS) field("p.", k).value = ""; field("p.", "date").value = isoDate(today()); }
 resetOrderForm(); resetPayForm(); refreshDatalists();
 
@@ -701,13 +735,24 @@ function note(id, kind, html) { $(id).innerHTML = html ? `<div class="note ${kin
 /* ---- parse the out-for-delivery message ---- */
 function parseOfdMessage(text) {
   const out = {}, unknown = [];
-  const clean = text.replace(/[‎‏‪-‮⁦-⁩﻿]/g, "");
+  const clean = text.replace(/[​-‏‪-‮⁦-⁩﻿︎️]/g, "").replace(/[  -   　\t]/g, " ");
   for (let line of clean.split(/\r?\n/)) {
-    line = line.replace(/^\[[^\]]*\]\s*[^:]+:\s*/, "");                  // copied WhatsApp header
-    const m = line.match(/^[\s▪•◾◼■▫*\-–]*([A-Za-z][A-Za-z .]*?)\s*(?:👉[\u{1F3FB}-\u{1F3FF}]?|➡️?|→|:|=|-)+\s*(.*)$/u);
-    if (!m) continue;
-    const key = ALIASES[normKey(m[1])], val = m[2].replace(/[👉➡️→]/gu, "").trim();
-    if (!key) { if (val) unknown.push(m[1].trim()); continue; }
+    line = line.replace(/^\s*\[[^\]]*\]\s*[^:]+:\s*/, "");          // copied WhatsApp header
+    line = line.replace(/^[^\p{L}]+/u, "").trim();                    // bullets, emoji, *bold* marks
+    if (!line) continue;
+    let label = null, val = null;
+    const m = line.match(/^(\p{L}[\p{L} .]*?)\s*[^\p{L}\p{N}\s]+\s*(.*)$/u);   // label, then symbols (👉🏻 : - * ...), then value
+    if (m && ALIASES[normKey(m[1])]) { label = m[1]; val = m[2]; }
+    else {                                                             // no symbol: "Quantity 2"
+      const words = line.split(/\s+/);
+      for (let i = Math.min(3, words.length - 1); i >= 1; i--) {
+        if (ALIASES[normKey(words.slice(0, i).join(""))]) { label = words.slice(0, i).join(" "); val = words.slice(i).join(" "); break; }
+      }
+      if (!label && m) { if (m[2].trim()) unknown.push(m[1].trim()); continue; }
+      if (!label) continue;
+    }
+    const key = ALIASES[normKey(label)];
+    val = val.replace(/^[^\p{L}\p{N}+(]+/u, "").replace(/[\s*_~]+$/, "").trim();
     if (key === "otp" || !val) continue;
     out[key] = val;
   }
@@ -740,7 +785,7 @@ $("pasteBox").addEventListener("input", () => {
 function readForm(fields, prefix) {
   const data = {}, problems = [];
   for (const [k, label, type, req] of fields) {
-    if (k === "pin") continue;
+    if (k === "pin" || COMPUTED.has(k)) continue;
     const raw = field(prefix, k).value.trim();
     if (!raw) { if (req) problems.push(`${label} is empty`); continue; }
     try {
@@ -856,7 +901,7 @@ const HEADERS = [
   new RegExp(`^\\[${TIME},\\s*(${DATE})\\]\\s+([^:]+):\\s?(.*)$`, "i"),
 ];
 const TAG_RE = /^\s*#\s*(ORDER|PAYMENT|UPDATE)\b(.*)$/i;
-const REQUIRED = { ORDER: ["by","platform","name","model","amount"], PAYMENT: ["sender","bank","amount"], UPDATE: ["tracking"] };
+const REQUIRED = { ORDER: ["by","platform","name","model","amount","return"], PAYMENT: ["sender","bank","amount"], UPDATE: ["tracking"] };
 function splitMessages(raw) {
   const lines = raw.replace(/[‎‏‪-‮⁦-⁩﻿]/g, "").split(/\r?\n/);
   const msgs = []; let cur = null;
