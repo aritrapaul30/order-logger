@@ -3,12 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Order Logger</title>
+<title>Digital Den · Order Logger</title>
 <style>
   :root { --dark:#075e54; --mid:#128c7e; --light:#25d366; --bg:#eef1f0; --line:#d7dddb; --err:#c62828; --ok:#2e7d32; --warn:#b26a00; }
   * { box-sizing:border-box; }
   html, body { height:100%; margin:0; }
   body { font:15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display:flex; flex-direction:column; background:var(--bg); color:#15201e; }
+  .brand { margin:0; font-size:clamp(24px, 6vw, 32px); line-height:1.1; letter-spacing:.01em; font-weight:800; }
+  .avatar { width:46px !important; height:46px !important; font-size:17px; }
+  .duebox { background:linear-gradient(135deg, #fff3e0, #ffe0b2); border:2px solid #fb8c00; border-radius:12px; padding:16px 18px; max-width:1000px; margin:0 auto 14px; }
+  .duebox .lbl { font-size:14px; font-weight:700; color:#8a4b00; text-transform:uppercase; letter-spacing:.05em; }
+  .duebox .amt { font-size:clamp(34px, 9vw, 46px); font-weight:800; color:#d84315; line-height:1.15; margin:2px 0 6px; font-variant-numeric:tabular-nums; }
+  .duebox .sub { font-size:13.5px; color:#6d4c1f; }
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px; }
+  .kpi { background:#f4faf8; border:1px solid #d5ebe4; border-radius:10px; padding:10px 12px; }
+  .kpi .lbl { font-size:12.5px; color:#5b6866; font-weight:600; } .kpi .val { font-size:22px; font-weight:800; color:var(--dark); font-variant-numeric:tabular-nums; }
+  .kpi.net .val { color:var(--ok); }
+  .scroll { overflow-x:auto; }
+  table.list td.num, table.list th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  table.list tr.total td { font-weight:800; border-top:2px solid var(--line); }
+  .bar { height:8px; border-radius:4px; background:var(--mid); min-width:2px; }
+  .neg { color:var(--err) !important; }
+  @media (max-width:600px) { .opt { display:none; } table.list td, table.list th { padding:7px 5px; } .tab { padding:10px; } .panel { padding:13px; } }
   header { background:var(--dark); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; gap:10px; flex-wrap:wrap; }
   .who { display:flex; align-items:center; gap:10px; min-width:0; }
   .avatar { width:38px; height:38px; border-radius:50%; background:var(--light); display:grid; place-items:center; font-weight:700; flex:none; }
@@ -80,8 +96,8 @@
 <body>
 <header>
   <div class="who">
-    <div class="avatar">OL</div>
-    <div><b>Order Logger</b><small id="fileStatus">No Excel file connected</small></div>
+    <div class="avatar">DD</div>
+    <div><h1 class="brand">Digital Den</h1><small>Order Logger · <span id="fileStatus">No Excel file connected</span></small></div>
   </div>
   <div>
     <button id="btnFile" class="primary">Open Excel file</button>
@@ -92,6 +108,7 @@
   <button data-tab="new" class="active">New delivery</button>
   <button data-tab="ofd">Out for delivery <span class="badge" id="ofdCount">0</span></button>
   <button data-tab="pay">Payments</button>
+  <button data-tab="profit">Profit</button>
   <button data-tab="chat">Chat</button>
 </nav>
 
@@ -127,6 +144,11 @@
 
 <!-- ============ PAYMENTS ============ -->
 <section class="tab" id="tab-pay">
+  <div class="duebox">
+    <div class="lbl">Payment still due to you</div>
+    <div class="amt" id="dueAmt">₹ –</div>
+    <div class="sub" id="dueSub">Open your Excel file to see the amount.</div>
+  </div>
   <div class="panel">
     <h2>Payment received</h2>
     <p class="hint">Goes into the payment columns (Payment date, Sender, Bank, Got).</p>
@@ -136,6 +158,15 @@
       <button class="btn ghost" id="btnClearPay">Clear</button>
     </div>
     <div id="payNote"></div>
+  </div>
+</section>
+
+<!-- ============ PROFIT ============ -->
+<section class="tab" id="tab-profit">
+  <div class="panel">
+    <h2>Month-wise profit</h2>
+    <p class="hint">By order date. Profit = Commission + Cashback + Bulk extra. Net profit = Profit − Commission cut (same as your sheet's totals).</p>
+    <div id="profitBox"><div class="empty">Open your Excel file to see your profits.</div></div>
   </div>
 </section>
 
@@ -495,7 +526,30 @@ function learn(sh) {
       L.ofd.push({ row: n, date: serialToDate(r.date), name: r.name, model: r.model, tracking: r.tracking, qty: r.qty, address: r.address });
   }
   for (const k of Object.keys(L.lists)) L.lists[k] = [...new Set(L.lists[k].reverse())];   // most recent first, unique
+  // money: same as the sheet's TOTAL / TOTAL GOT / LEFT and Total Profit / Net PROFIT
+  const num = v => { const n = Number(v); return v !== null && v !== "" && isFinite(n) ? n : null; };
+  const commission = n => {                       // column O: cached value, or Return - Amount
+    const v = sh.value(n, COMMISSION_COL); if (v === null) return 0;
+    const x = num(v); if (x !== null) return x;
+    return (num(sh.value(n, ORDER_COLS.return)) || 0) - (num(sh.value(n, ORDER_COLS.amount)) || 0);
+  };
+  let toGet = 0, got = 0; const months = {};
+  for (const n of [...sh.rows.keys()].filter(n => n >= 2)) {
+    const amt = num(sh.value(n, ORDER_COLS.amount)) || 0, com = n >= FIRST_DATA_ROW ? commission(n) : 0;
+    toGet += amt + com;
+    got += num(sh.value(n, PAYMENT_COLS.amount)) || 0;
+    if (n < FIRST_DATA_ROW) continue;
+    const d = serialToDate(sh.value(n, ORDER_COLS.date));
+    const cb = num(sh.value(n, ORDER_COLS.cashback)) || 0, bx = num(sh.value(n, ORDER_COLS.bulk_extra)) || 0, cut = num(sh.value(n, ORDER_COLS.commission_cut)) || 0;
+    if (!d || (!amt && !com && !cb && !bx && !cut)) continue;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const m = months[key] = months[key] || { orders: 0, com: 0, cb: 0, bx: 0, cut: 0 };
+    m.orders++; m.com += com; m.cb += cb; m.bx += bx; m.cut += cut;
+  }
+  L.money = { toGet, got, due: toGet - got };
+  L.months = months;
   learned = L;
+  renderMoney();
   refreshDatalists(); renderOfd();
 }
 
@@ -505,7 +559,7 @@ function writeOrder(sh, d, replaceRow) {
   const styleRow = replaceRow || row - 1;
   for (const [f, col] of Object.entries(ORDER_COLS)) sh.set(row, col, f in d ? d[f] : null, styleRow);
   sh.set(row, COMMISSION_COL, `=SUM(R${row}-N${row})`, styleRow);
-  sh.set(row, HAVE_COL, `=SUM(N${row}+S${row})`, styleRow);
+  sh.set(row, HAVE_COL, "commission_cut" in d ? `=SUM(N${row}+S${row})` : null, styleRow);
   return row;
 }
 function writePayment(sh, d) {
@@ -603,7 +657,7 @@ function buildForm(container, fields, prefix) {
   $(container).innerHTML = fields.map(([k, label, type, req, wide]) =>
     `<div class="field${wide ? " wide" : ""}" id="f-${prefix}${k}"><label class="${req ? "req" : ""}" for="${prefix}${k}">${label}</label>
      <input id="${prefix}${k}" type="${type === "date" ? "date" : "text"}" ${type === "number" ? 'inputmode="decimal"' : ""} ${NO_LIST.has(k) ? "" : `list="dl-${prefix}${k}"`} autocomplete="off">
-     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}${k === "commission" ? '<small>Return − Amount. Type any two of the three</small>' : ""}${k === "have_to_return" ? '<small>Amount + Commission cut</small>' : ""}</div>`).join("");
+     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}${k === "commission" ? '<small>Return − Amount. Type any two of the three</small>' : ""}${k === "have_to_return" ? '<small>Amount + Commission cut. Fill either one</small>' : ""}</div>`).join("");
 }
 buildForm("orderForm", ORDER_FIELDS, "o.");
 buildForm("payForm", PAY_FIELDS, "p.");
@@ -626,16 +680,20 @@ function resetOrderForm() {
   field("o.", "qty").value = "1";
   $("pasteNote").innerHTML = "";
   trioOrder = [];
-  if (typeof updateTotals === "function") { field("o.", "have_to_return").readOnly = true; $("f-o.have_to_return").classList.add("locked"); }
 }
 /* Amount, Return amount, Commission: type any two, the third is calculated */
 const TRIO = ["amount", "return", "commission"];
 let trioOrder = [];
 const numOf = k => { const v = field("o.", k).value.replace(/[₹,\s]/g, ""); return v !== "" && isFinite(+v) ? +v : null; };
 const round2 = n => Math.round(n * 100) / 100;
+/* Commission cut <-> I have to return: filled only when one of them has a value */
 function updateTotals() {
   const a = numOf("amount"), c = numOf("commission_cut");
-  field("o.", "have_to_return").value = a === null ? "" : round2(a + (c || 0));
+  field("o.", "have_to_return").value = c === null || a === null ? "" : round2(a + c);
+}
+function fromHaveToReturn() {
+  const a = numOf("amount"), h = numOf("have_to_return");
+  field("o.", "commission_cut").value = h === null || a === null ? "" : round2(h - a);
 }
 function onTrioInput(k) {
   trioOrder = trioOrder.filter(x => x !== k);
@@ -652,7 +710,7 @@ function onTrioInput(k) {
 }
 for (const k of TRIO) field("o.", k).addEventListener("input", () => onTrioInput(k));
 field("o.", "commission_cut").addEventListener("input", updateTotals);
-for (const k of COMPUTED) if (k === "have_to_return") { field("o.", k).readOnly = true; $("f-o." + k).classList.add("locked"); }
+field("o.", "have_to_return").addEventListener("input", fromHaveToReturn);
 
 function resetPayForm() { for (const [k] of PAY_FIELDS) field("p.", k).value = ""; field("p.", "date").value = isoDate(today()); }
 resetOrderForm(); resetPayForm(); refreshDatalists();
@@ -855,6 +913,33 @@ $("btnAddPay").addEventListener("click", async () => {
   finally { $("btnAddPay").disabled = false; }
 });
 $("btnClearPay").addEventListener("click", () => { resetPayForm(); note("payNote"); });
+
+/* ======================= due amount + profit tab ======================= */
+const inr = n => (n < 0 ? "−₹" : "₹") + Math.abs(Math.round(n)).toLocaleString("en-IN");
+function renderMoney() {
+  if (!learned.money) return;
+  const { toGet, got, due } = learned.money;
+  $("dueAmt").textContent = inr(due);
+  $("dueAmt").classList.toggle("neg", due < 0);
+  $("dueSub").textContent = `Total to get ${inr(toGet)} (Amount + Commission) − received so far ${inr(got)} (after last year's due)`;
+  const keys = Object.keys(learned.months).sort().reverse();
+  if (!keys.length) { $("profitBox").innerHTML = `<div class="empty">No orders with amounts yet.</div>`; return; }
+  const net = m => m.com + m.cb + m.bx - m.cut;
+  const tot = keys.reduce((t, k) => { const m = learned.months[k]; for (const f of ["orders", "com", "cb", "bx", "cut"]) t[f] += m[f]; return t; }, { orders: 0, com: 0, cb: 0, bx: 0, cut: 0 });
+  const max = Math.max(...keys.map(k => Math.abs(net(learned.months[k]))), 1);
+  const thisMonth = isoDate(today()).slice(0, 7), cur = learned.months[thisMonth];
+  const label = k => new Date(+k.slice(0, 4), +k.slice(5) - 1, 1).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  $("profitBox").innerHTML = `<div class="kpis">
+      <div class="kpi net"><div class="lbl">Net profit, ${label(thisMonth)}</div><div class="val">${inr(cur ? net(cur) : 0)}</div></div>
+      <div class="kpi net"><div class="lbl">Net profit, all months</div><div class="val">${inr(net(tot))}</div></div>
+      <div class="kpi"><div class="lbl">Total profit (before cut)</div><div class="val">${inr(tot.com + tot.cb + tot.bx)}</div></div>
+      <div class="kpi"><div class="lbl">Total commission cut</div><div class="val">${inr(tot.cut)}</div></div>
+    </div>
+    <div class="scroll"><table class="list"><tr><th>Month</th><th class="num">Orders</th><th class="num">Commission</th><th class="num opt">Cashback</th><th class="num opt">Bulk extra</th><th class="num">Comm. cut</th><th class="num">Net profit</th><th class="opt" style="width:22%"></th></tr>` +
+    keys.map(k => { const m = learned.months[k], n = net(m);
+      return `<tr><td>${label(k)}</td><td class="num">${m.orders}</td><td class="num">${inr(m.com)}</td><td class="num opt">${inr(m.cb)}</td><td class="num opt">${inr(m.bx)}</td><td class="num">${inr(m.cut)}</td><td class="num ${n < 0 ? "neg" : ""}"><b>${inr(n)}</b></td><td class="opt"><div class="bar" style="width:${Math.abs(n) / max * 100}%;${n < 0 ? "background:var(--err)" : ""}"></div></td></tr>`; }).join("") +
+    `<tr class="total"><td>Total</td><td class="num">${tot.orders}</td><td class="num">${inr(tot.com)}</td><td class="num opt">${inr(tot.cb)}</td><td class="num opt">${inr(tot.bx)}</td><td class="num">${inr(tot.cut)}</td><td class="num">${inr(net(tot))}</td><td class="opt"></td></tr></table></div>`;
+}
 
 /* ======================= out for delivery tab ======================= */
 function renderOfd() {
