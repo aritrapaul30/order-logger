@@ -97,10 +97,10 @@
 <header>
   <div class="who">
     <div class="avatar">DD</div>
-    <div><h1 class="brand">Digital Den</h1><small>Order Logger · <span id="fileStatus">No Excel file connected</span></small></div>
+    <div><h1 class="brand">Digital Den</h1><small>Order Logger · <span id="fileStatus">Not connected. Press Connect</span></small></div>
   </div>
   <div>
-    <button id="btnFile" class="primary">Open Excel file</button>
+    <button id="btnConnect" class="primary">Connect</button>
     <button id="btnSettings">Shortcuts</button>
   </div>
 </header>
@@ -125,7 +125,7 @@
     <p class="hint">Click a box to pick from past entries, or type something new. New values are remembered.</p>
     <div class="grid" id="orderForm"></div>
     <div class="actions">
-      <button class="btn" id="btnAddOrder">Add to Excel</button>
+      <button class="btn" id="btnAddOrder">Add to sheet</button>
       <button class="btn ghost" id="btnClearOrder">Clear form</button>
     </div>
     <div id="orderNote"></div>
@@ -137,7 +137,7 @@
   <div class="panel">
     <h2>Out for delivery</h2>
     <p class="hint">Orders whose status is "Out for Delivery" in your sheet. Press Delivered to set the status and delivery date.</p>
-    <div id="ofdList"><div class="empty">Open your Excel file to see the list.</div></div>
+    <div id="ofdList"><div class="empty">Press Connect at the top to see the list.</div></div>
     <div id="ofdNote"></div>
   </div>
 </section>
@@ -147,14 +147,14 @@
   <div class="duebox">
     <div class="lbl">Payment still due to you</div>
     <div class="amt" id="dueAmt">₹ –</div>
-    <div class="sub" id="dueSub">Open your Excel file to see the amount.</div>
+    <div class="sub" id="dueSub">Press Connect at the top to see the amount.</div>
   </div>
   <div class="panel">
     <h2>Payment received</h2>
     <p class="hint">Goes into the payment columns (Payment date, Sender, Bank, Got).</p>
     <div class="grid" id="payForm"></div>
     <div class="actions">
-      <button class="btn" id="btnAddPay">Add to Excel</button>
+      <button class="btn" id="btnAddPay">Add to sheet</button>
       <button class="btn ghost" id="btnClearPay">Clear</button>
     </div>
     <div id="payNote"></div>
@@ -166,7 +166,7 @@
   <div class="panel">
     <h2>Month-wise profit</h2>
     <p class="hint">By order date. Profit = Commission + Cashback + Bulk extra. Net profit = Profit − Commission cut (same as your sheet's totals).</p>
-    <div id="profitBox"><div class="empty">Open your Excel file to see your profits.</div></div>
+    <div id="profitBox"><div class="empty">Press Connect at the top to see your profits.</div></div>
   </div>
 </section>
 
@@ -199,6 +199,20 @@
   <div class="row"><button class="btn ghost" data-close>Close</button></div>
 </dialog>
 
+<dialog id="dlgConnect">
+  <h3>Connect your data</h3>
+  <b>Google Sheet (works on phone, PC can be off)</b>
+  <p class="hint">Paste the web app URL and access key from your Apps Script. You only do this once per device, or open your setup link instead.</p>
+  <div class="field"><label for="gUrl">Web app URL</label><input id="gUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
+  <div class="field" style="margin-top:8px"><label for="gKey">Access key</label><input id="gKey" autocomplete="off"></div>
+  <div id="gNote"></div>
+  <div class="row"><button class="btn ghost" id="gDisconnect">Disconnect</button><button class="btn" id="gSave">Connect Google Sheet</button></div>
+  <hr style="border:0;border-top:1px solid #e3e9e7;margin:16px 0 10px">
+  <b>Or an Excel file on this computer</b>
+  <p class="hint">Chrome or Edge on a computer only.</p>
+  <div class="row" style="justify-content:space-between"><button class="btn ghost" data-close>Close</button><button class="btn ghost" id="btnFile">Open Excel file</button></div>
+</dialog>
+
 <dialog id="dlgSettings">
   <h3>Shortcuts</h3>
   <p class="hint">One per line as <b>CODE = full text</b>. Saved only in this browser.</p>
@@ -221,6 +235,7 @@ const ORDER_COLS = {
   cashback:"P", bulk_extra:"Q", return:"R", commission_cut:"S"
 };
 const COMMISSION_COL = "O";
+const KEY_COLS = ["A", "B", "C", "D", "F", "I", "N"];   // date, placed by, platform, name, model, tracking, amount
 const PAYMENT_COLS = { date:"V", sender:"W", bank:"X", amount:"Y" };
 const OFD = "Out for Delivery";
 const DELIVERED = "Delivered";
@@ -468,6 +483,11 @@ class Sheet {
     }
     return hits;
   }
+  setKeep(n, col, val) {                 // change a value, keep the cell's own format
+    const c = this.cell(n, col, true), keep = c.getAttribute("s");
+    this.set(n, col, val, n > FIRST_DATA_ROW ? n - 1 : 0);
+    if (keep) c.setAttribute("s", keep);
+  }
   fixDimension() {
     const dim = this.doc.getElementsByTagNameNS(NS, "dimension")[0]; if (!dim) return;
     const max = Math.max(...this.rows.keys());
@@ -555,7 +575,7 @@ function learn(sh) {
 
 /* operations on the sheet */
 function writeOrder(sh, d, replaceRow) {
-  const row = replaceRow || sh.lastRow(Object.values(ORDER_COLS)) + 1;
+  const row = replaceRow || sh.lastRow(KEY_COLS) + 1;
   const styleRow = replaceRow || row - 1;
   for (const [f, col] of Object.entries(ORDER_COLS)) sh.set(row, col, f in d ? d[f] : null, styleRow);
   sh.set(row, COMMISSION_COL, `=SUM(R${row}-N${row})`, styleRow);
@@ -571,9 +591,7 @@ function updateRow(sh, row, d) {
   const changes = [];
   for (const [f, v] of Object.entries(d)) {
     if (f === "tracking" || !(f in ORDER_COLS)) continue;
-    const c = sh.cell(row, ORDER_COLS[f], true), keep = c.getAttribute("s");
-    sh.set(row, ORDER_COLS[f], v, row > FIRST_DATA_ROW ? row - 1 : 0);
-    if (keep) c.setAttribute("s", keep);
+    sh.setKeep(row, ORDER_COLS[f], v);
     changes.push(`${LABELS[f] || f} = ${fmtDate(v)}`);
   }
   return changes;
@@ -602,7 +620,7 @@ async function currentBytes() {
     return new Uint8Array(await (await handle.getFile()).arrayBuffer());
   }
   if (memBytes) return memBytes;
-  throw new Error("Open your Excel file first (button at the top right).");
+  throw new Error("Press Connect at the top first.");
 }
 async function writeBytes(out) {
   if (handle) {
@@ -617,7 +635,78 @@ async function writeBytes(out) {
   return memName + " (downloaded)";
 }
 /* read latest file -> run fn on the sheet -> save if fn says so -> relearn */
+/* ---------- Google Sheets (via your Apps Script web app) ---------- */
+let remote = null;   // { url, key }
+try { remote = JSON.parse(localStorage.getItem("ol_remote") || "null"); } catch (e) {}
+const isoToSerial = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
+async function api(req, cfg = remote) {
+  let r;
+  try {
+    r = await fetch(cfg.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ ...req, key: cfg.key }) });
+  } catch (e) { throw new Error("Couldn't reach your Google Sheet. Check the internet connection and try again."); }
+  let j; try { j = await r.json(); } catch (e) { throw new Error("The Google Sheet link didn't answer properly. Check the web app URL in Connect."); }
+  if (!j.ok) throw new Error(j.error || "Google Sheet error");
+  return j;
+}
+class RemoteSheet {
+  constructor(values) {
+    this.grid = values.map(r => r.slice()); this.rows = new Map(); this.changes = []; this.orig = new Map();
+    values.forEach((r, i) => { if (r.some(v => v !== "" && v !== null)) this.rows.set(i + 1, true); });
+  }
+  raw(n, c) { const r = this.grid[n - 1]; return r ? r[c - 1] : ""; }
+  value(n, col) {
+    const v = this.raw(n, colNum(col));
+    if (v === "" || v === null || v === undefined) return null;
+    if (typeof v === "object" && v.d) return String(isoToSerial(v.d));
+    return String(v);
+  }
+  lastRow(cols) {
+    for (const n of [...this.rows.keys()].sort((a, b) => b - a)) {
+      if (n < FIRST_DATA_ROW) break;
+      if (cols.some(c => { const v = this.value(n, c); return v !== null && v.trim() !== ""; })) return n;
+    }
+    return FIRST_DATA_ROW - 1;
+  }
+  findTracking(id) {
+    const want = String(id).trim().toUpperCase(), hits = [];
+    for (const n of this.rows.keys()) {
+      if (n < FIRST_DATA_ROW) continue;
+      const v = this.value(n, ORDER_COLS.tracking);
+      if (v !== null && v.trim().toUpperCase() === want) hits.push(n);
+    }
+    return hits;
+  }
+  set(n, col, val, styleRow) {
+    const c = colNum(col), key = n + ":" + c;
+    if (!this.orig.has(key)) this.orig.set(key, this.raw(n, c) ?? "");
+    const ch = { row: n, col: c, styleRow: styleRow >= FIRST_DATA_ROW && styleRow !== n ? styleRow : 0 };
+    let cellVal = "";
+    if (val instanceof Date) { ch.date = isoDate(val); cellVal = { d: ch.date }; }
+    else if (typeof val === "number") { ch.v = val; cellVal = val; }
+    else if (typeof val === "string" && val.startsWith("=")) { ch.f = val; cellVal = ""; }
+    else { ch.v = val === null || val === undefined ? "" : String(val); cellVal = ch.v; }
+    ch.was = this.orig.get(key);
+    this.changes = this.changes.filter(x => !(x.row === n && x.col === c));
+    this.changes.push(ch);
+    while (this.grid.length < n) this.grid.push([]);
+    this.grid[n - 1][c - 1] = cellVal;
+    this.rows.set(n, true);
+  }
+  setKeep(n, col, val) { this.set(n, col, val, 0); }
+  fixDimension() {}
+}
+
 async function withSheet(fn) {
+  if (remote) {
+    const sh = new RemoteSheet((await api({ action: "read" })).values);
+    const res = await fn(sh);
+    if (res && res.save && sh.changes.length) {
+      const out = await api({ action: "write", changes: sh.changes });
+      res.where = "your Google Sheet";
+      learn(new RemoteSheet(out.values));
+    } else learn(sh);
+    return res || {};
+  }
   const book = await openWorkbook(await currentBytes());
   const res = await fn(book.sheet);
   if (res && res.save) res.where = await writeBytes(await saveWorkbook(book));
@@ -627,7 +716,7 @@ async function withSheet(fn) {
 async function connected_(name, how) {
   connected = true;
   setStatus(`Connected: ${name}${how}`);
-  $("btnFile").textContent = "Change file";
+  if (!remote) $("btnFile").textContent = "Change Excel file";
   await withSheet(() => null);
 }
 let reconnectPending = false;
@@ -642,8 +731,10 @@ $("btnFile").addEventListener("click", async () => {
       handle = h; reconnectPending = false;
       if (!(await hasPermission(true))) { setStatus("Permission not given"); return; }
       await idb.set("handle", handle);
+      remote = null; try { localStorage.removeItem("ol_remote"); } catch (e) {}
+      $("dlgConnect").close();
       await connected_(handle.name, " (saves directly)");
-    } else $("fileInput").click();
+    } else { remote = null; try { localStorage.removeItem("ol_remote"); } catch (e) {} $("dlgConnect").close(); $("fileInput").click(); }
   } catch (e) { setStatus("Error: " + e.message); }
 });
 $("fileInput").addEventListener("change", async e => {
@@ -1058,7 +1149,7 @@ function chatSend() {
   const items = parsePaste(text);
   if (!items.length) { addMsg("bot", `I couldn't find any #ORDER, #PAYMENT or #UPDATE in that. For "Out for delivery" messages use the <b>New delivery</b> tab.`); return; }
   const good = items.filter(i => !i.problems.length);
-  const m = addMsg("bot", `${items.map(card).join("")}<div class="btns">${good.length ? `<button class="btn small" data-act="add">Add ${good.length} to Excel</button>` : ""}<button class="btn small ghost" data-act="cancel">${good.length ? "Cancel" : "OK"}</button></div>`);
+  const m = addMsg("bot", `${items.map(card).join("")}<div class="btns">${good.length ? `<button class="btn small" data-act="add">Add ${good.length} to sheet</button>` : ""}<button class="btn small ghost" data-act="cancel">${good.length ? "Cancel" : "OK"}</button></div>`);
   m.querySelector(".btns").addEventListener("click", async ev => {
     const act = ev.target.dataset.act; if (!act) return;
     const btns = m.querySelectorAll(".btns button"); btns.forEach(b => b.disabled = true);
@@ -1114,21 +1205,58 @@ $("saveSettings").addEventListener("click", () => {
 });
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
 
-/* ======================= start: reconnect last file ======================= */
+/* ======================= connect dialog ======================= */
+$("btnConnect").addEventListener("click", () => {
+  $("gUrl").value = remote ? remote.url : ""; $("gKey").value = remote ? remote.key : ""; $("gNote").innerHTML = "";
+  $("dlgConnect").showModal();
+});
+async function connectRemote(cfg) {
+  const j = await api({ action: "read" }, cfg);
+  remote = cfg; try { localStorage.setItem("ol_remote", JSON.stringify(cfg)); } catch (e) {}
+  handle = null; memBytes = null; reconnectPending = false;
+  connected = true;
+  setStatus(`Google Sheet: ${j.name || "connected"}`);
+  learn(new RemoteSheet(j.values));
+}
+$("gSave").addEventListener("click", async () => {
+  const cfg = { url: $("gUrl").value.trim(), key: $("gKey").value.trim() };
+  if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(cfg.url)) { note("gNote", "err", "That doesn't look like an Apps Script web app URL."); return; }
+  $("gSave").disabled = true; note("gNote", "warn", "Connecting…");
+  try { await connectRemote(cfg); note("gNote", "ok", "✔ Connected."); setTimeout(() => $("dlgConnect").close(), 700); }
+  catch (e) { note("gNote", "err", esc(e.message)); }
+  finally { $("gSave").disabled = false; }
+});
+$("gDisconnect").addEventListener("click", () => {
+  remote = null; connected = false; try { localStorage.removeItem("ol_remote"); } catch (e) {}
+  setStatus("Not connected"); $("dlgConnect").close();
+});
+
+/* ======================= start: setup link, then saved connection ======================= */
 (async () => {
+  const m = location.hash.match(/connect=([^&]+)/);
+  if (m) {
+    try { const cfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))); remote = { url: cfg.u, key: cfg.k }; localStorage.setItem("ol_remote", JSON.stringify(remote)); } catch (e) {}
+    history.replaceState(null, "", location.pathname);
+  }
+  if (remote) {
+    setStatus("Connecting to Google Sheet…");
+    try { await connectRemote(remote); } catch (e) { setStatus("Couldn't load Google Sheet: " + e.message); }
+    return;
+  }
   if (!canSaveInPlace) return;
   try {
     const h = await idb.get("handle"); if (!h) return;
     handle = h;
     if (await hasPermission(false)) { await connected_(h.name, " (saves directly)"); return; }
     reconnectPending = true;
-    setStatus(`Last file: ${h.name}`);
+    setStatus(`Last file: ${h.name} (open Connect to reconnect)`);
     $("btnFile").textContent = "Reconnect " + h.name;
   } catch (e) {}
 })();
 
 window.__test = {   // used for automated testing only
-  async load(bytes, name) { memBytes = bytes; memName = name; handle = null; await connected_(name, ""); },
+  async load(bytes, name) { memBytes = bytes; memName = name; handle = null; remote = null; await connected_(name, ""); },
+  connectRemote, RemoteSheet,
   bytes: () => memBytes, parseOfdMessage
 };
 </script>
