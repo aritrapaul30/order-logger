@@ -218,7 +218,7 @@
   <div class="clients" id="clientCards"></div>
   <div class="panel" style="margin-top:14px">
     <h2>Payment Check</h2>
-    <p class="hint">Makes sure every payment a dealer made straight to a client is in Clients Payments exactly once, and flags entries that look entered twice.</p>
+    <p class="hint">Makes sure every payment a dealer made straight to a client (Bank starting with the client's name) is in Clients Payments exactly once, from that client's oldest open entry onwards, and flags entries that look entered twice.</p>
     <div id="payCheck"></div>
   </div>
   <div id="clientNote" style="max-width:1000px;margin:10px auto"></div>
@@ -1084,6 +1084,17 @@ $("ofdList").addEventListener("click", async e => {
    It is mirrored in Payment Details as Given = amount, Date = payment date (the usual way).
    The pair is matched by client + amount + date, so each side is written only once. */
 const clientBlock = (S, name) => name ? parseClients(S.clients).find(b => normName(b.name) === normName(name)) : null;
+/* Bank text that starts with a client's name ("Arko Da", "Arko Da SBI Cash Deposit") belongs to that client; longest name wins */
+function bankStartsWith(bank, client) {
+  const t = String(bank || "").trim().toLowerCase().replace(/\s+/g, " "), n = String(client || "").trim().toLowerCase().replace(/\s+/g, " ");
+  return !!n && (t === n || (t.startsWith(n) && !/[a-z0-9]/.test(t[n.length])));
+}
+function clientForBank(blocks, bank) {
+  let best = null;
+  for (const b of blocks) if (bankStartsWith(bank, b.name) && (!best || b.name.length > best.name.length)) best = b;
+  return best;
+}
+const bankBlock = (S, bank) => bank ? clientForBank(parseClients(S.clients), bank) : null;
 const same$ = (a, b) => a !== null && b !== null && a !== undefined && b !== undefined && Math.abs(a - b) < 0.5;
 const sameDay = (a, b) => a instanceof Date && b instanceof Date && isoDate(a) === isoDate(b);
 function clientLinkRows(blk, date, amount) {
@@ -1092,7 +1103,7 @@ function clientLinkRows(blk, date, amount) {
 function dealerLinkRows(sh, client, date, amount) {
   const out = [];
   for (const n of sh.rows.keys()) if (n >= FIRST_DATA_ROW && sameDay(sh.date(n, PAYMENT_COLS.date), date) &&
-    same$(num(sh.value(n, PAYMENT_COLS.amount)), amount) && normName(sh.value(n, PAYMENT_COLS.bank)) === normName(client)) out.push(n);
+    same$(num(sh.value(n, PAYMENT_COLS.amount)), amount) && bankStartsWith(sh.value(n, PAYMENT_COLS.bank), client)) out.push(n);
   return out.sort((a, b) => a - b);
 }
 function addClientGiven(S, blk, amount, dateVal) {
@@ -1146,7 +1157,7 @@ $("btnAddPay").addEventListener("click", async () => {
   $("btnAddPay").disabled = true;
   try {
     const res = await withData(S => {
-      const blk = clientBlock(S, data.bank);
+      const blk = bankBlock(S, data.bank);
       if (blk && dealerLinkRows(S[dealer], blk.name, data.date, data.amount).length &&
           !confirm(`${DEALERS[dealer].name} already has a payment of ${inr(data.amount)} to ${blk.name} on ${fmtDate(data.date)}. Add another one?`)) return { save: false, cancelled: true };
       const sh = S[dealer], last = sh.lastRow(Object.values(PAYMENT_COLS)), row = last + 1;
@@ -1263,16 +1274,18 @@ async function settleClient(i) {
 function renderPayCheck() {
   if (!connected) return;
   const issues = [];
-  const byName = Object.fromEntries(L.clients.map(b => [normName(b.name), b]));
   for (const [k, D] of Object.entries(L.dealers)) {
     const seen = {};
     for (const p of D.payments || []) {
       if (!p.date) continue;
       const key = [isoDate(p.date), normName(p.sender), normName(p.bank), p.amount].join("|");
       (seen[key] = seen[key] || []).push(p.row);
-      const b = byName[normName(p.bank)];
+      const b = clientForBank(L.clients, p.bank);
       if (!b) continue;
-      const dealerSame = (D.payments || []).filter(q => q.date && sameDay(q.date, p.date) && same$(q.amount, p.amount) && normName(q.bank) === normName(b.name)).length;
+      // only the period the client still has open entries for; older ones were settled and cleared on purpose
+      const dates = b.entries.flatMap(e => [e.od, e.gdate]).filter(d => d instanceof Date);
+      if (!dates.length || p.date < new Date(Math.min(...dates))) continue;
+      const dealerSame = (D.payments || []).filter(q => q.date && sameDay(q.date, p.date) && same$(q.amount, p.amount) && bankStartsWith(q.bank, b.name)).length;
       const clientSame = b.entries.filter(e => same$(e.given, p.amount) && sameDay(e.gdate, p.date)).length;
       if (clientSame < dealerSame && !issues.some(x => x.kind === "missing" && x.k === k && x.row === p.row))
         issues.push({ kind: "missing", k, row: p.row, client: b.name, date: p.date, amount: p.amount,
@@ -1470,10 +1483,10 @@ async function savePay(del) {
   try {
     const res = await withData(S => {
       const sh = S[k], old = { date: sh.date(row, PAYMENT_COLS.date), bank: sh.value(row, PAYMENT_COLS.bank), amount: num(sh.value(row, PAYMENT_COLS.amount)) };
-      const oldBlk = clientBlock(S, old.bank), oldLink = oldBlk ? clientLinkRows(oldBlk, old.date, old.amount) : [];
+      const oldBlk = bankBlock(S, old.bank), oldLink = oldBlk ? clientLinkRows(oldBlk, old.date, old.amount) : [];
       for (const [f, col] of Object.entries(PAYMENT_COLS)) sh.set(row, col, del ? null : data[f]);
       if (del) { if (oldLink.length) { clearClientRow(S, oldBlk, oldLink[0]); return { link: `Also removed from ${oldBlk.name}'s Clients Payments.` }; } return {}; }
-      const newBlk = clientBlock(S, data.bank);
+      const newBlk = bankBlock(S, data.bank);
       if (oldLink.length && newBlk && oldBlk.name === newBlk.name) {
         S.clients.set(oldLink[0], newBlk.givenCol, data.amount); S.clients.set(oldLink[0], newBlk.dateCol, data.date);
         return { link: `${newBlk.name}'s Clients Payments updated to match.` };
