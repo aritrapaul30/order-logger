@@ -189,8 +189,8 @@
     <div id="payNote"></div>
   </div>
   <div class="panel">
-    <h2>Last 5 Payments</h2>
-    <p class="hint">Newest entry first, for both dealers. Tap Edit to fix a wrong entry.</p>
+    <h2 id="lastPaysTitle">Last 5 Payments</h2>
+    <p class="hint">Newest entry first, for the dealer selected at the top. Tap Edit to fix a wrong entry.</p>
     <div id="lastPays"><div class="empty">Press Connect to see payments.</div></div>
     <div id="lastPayNote"></div>
   </div>
@@ -230,8 +230,8 @@
 <!-- ============ LAST 5 ORDERS ============ -->
 <section class="tab" id="tab-last">
   <div class="panel">
-    <h2>Last 5 Orders</h2>
-    <p class="hint">The 5 orders with the latest delivery dates across both dealers, so you can see where your last entry was.</p>
+    <h2 id="lastOrdersTitle">Last 5 Orders</h2>
+    <p class="hint">The 5 orders with the latest delivery dates for the dealer selected at the top, newest first, so you can see where your last entry was.</p>
     <div id="lastOrders"><div class="empty">Press Connect to see your orders.</div></div>
   </div>
 </section>
@@ -1348,9 +1348,10 @@ function renderAll() { renderIncomplete(); renderOfd(); renderMoney(); renderCli
 /* ---------- last 5 dealer payments + edit ---------- */
 function renderLastPays() {
   if (!connected) return;
-  $("lastPays").innerHTML = Object.entries(DEALERS).map(([k, d]) => {
+  $("lastPaysTitle").textContent = `Last 5 Payments · ${DEALERS[dealer].name}`;
+  $("lastPays").innerHTML = [[dealer, DEALERS[dealer]]].map(([k, d]) => {
     const P = ((L.dealers[k] || {}).payments || []).slice().sort((a, b) => b.row - a.row).slice(0, 5);
-    return `<h3 style="margin:12px 0 6px;font-size:15px;color:var(--dark)">${esc(d.name)}</h3>` + (P.length ? `<div class="scroll"><table class="list"><tr><th>Row</th><th>Date</th><th>Sender</th><th class="opt">Bank</th><th class="num">Amount</th><th></th></tr>` +
+    return (P.length ? `<div class="scroll"><table class="list"><tr><th>Row</th><th>Date</th><th>Sender</th><th class="opt">Bank</th><th class="num">Amount</th><th></th></tr>` +
       P.map(p => `<tr><td>${p.row}</td><td>${fmtDate(p.date)}</td><td>${esc(p.sender || "")}</td><td class="opt">${esc(p.bank || "")}</td><td class="num"><b>${p.amount !== null ? inr(p.amount) : ""}</b></td><td><button class="btn small ghost" data-editpay="${k}:${p.row}">Edit</button></td></tr>`).join("") + `</table></div>`
       : `<div class="empty">No payments yet.</div>`);
   }).join("");
@@ -1425,11 +1426,13 @@ $("egDelete").addEventListener("click", () => saveGiven(true));
 function renderLastOrders() {
   if (!connected) return;
   const all = [];
-  for (const [k, D] of Object.entries(L.dealers)) for (const r of Object.values(D.rows)) if (r.deliveryObj) all.push({ k, r });
+  $("lastOrdersTitle").textContent = `Last 5 Orders · ${DEALERS[dealer].name}`;
+  const D = L.dealers[dealer] || { rows: {} };
+  for (const r of Object.values(D.rows)) if (r.deliveryObj) all.push({ k: dealer, r });
   all.sort((a, b) => (b.r.deliveryObj - a.r.deliveryObj) || (b.r.row - a.r.row));
   const top = all.slice(0, 5);
   $("lastOrders").innerHTML = top.length ? top.map(({ k, r }, i) => `<div class="panel" style="margin:10px 0;border-left:4px solid ${i === 0 ? "var(--light)" : "var(--mid)"}">
-      <h2>${i === 0 ? "🆕 " : ""}${fmtDate(r.deliveryObj)} · ${esc(DEALERS[k].name)} · Row ${r.row}</h2>
+      <h2>${i === 0 ? "🆕 " : ""}${fmtDate(r.deliveryObj)} · Row ${r.row}</h2>
       <table class="list">${[["Delivery Status", r.status], ["Parcel Name", r.name], ["Model", r.model || r.platform], ["Tracking ID", r.tracking], ["Card Details", r.card], ["Amount Paid By", r.paid_by], ["Amount", r.amount ? inr(num(r.amount)) : ""], ["Order Date", fmtDate(r.dateObj)]]
         .filter(([, v]) => v).map(([l, v]) => `<tr><td style="color:#5b6866;width:38%">${l}</td><td><b>${esc(v)}</b></td></tr>`).join("")}</table></div>`).join("")
     : `<div class="empty">No orders with a delivery date yet.</div>`;
