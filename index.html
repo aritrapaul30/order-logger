@@ -102,7 +102,8 @@
   .ccard.zero .left { color:var(--ok); }
   .ccard.extra { border-top-color:#7b1fa2; background:#faf5fc; } .ccard.extra .left { color:#7b1fa2; }
   .ccard .meta { font-size:13px; color:#5b6866; margin-bottom:8px; }
-  .ccard details { margin-top:8px; font-size:13.5px; }
+  .ccard details { margin-top:8px; font-size:13.5px; overflow-x:auto; }
+  .ccard { min-width:0; }
   .ccard summary { cursor:pointer; color:var(--mid); font-weight:600; }
   .ccard table td, .ccard table th { padding:4px 6px; font-size:13px; }
   dialog { border:0; border-radius:12px; padding:18px; width:min(560px, 94vw); box-shadow:0 10px 40px rgba(0,0,0,.3); }
@@ -215,6 +216,11 @@
     <button class="btn small ghost" id="btnAddClient">+ Add client</button>
   </div>
   <div class="clients" id="clientCards"></div>
+  <div class="panel" style="margin-top:14px">
+    <h2>Payment Check</h2>
+    <p class="hint">Makes sure every payment a dealer made straight to a client is in Clients Payments exactly once, and flags entries that look entered twice.</p>
+    <div id="payCheck"></div>
+  </div>
   <div id="clientNote" style="max-width:1000px;margin:10px auto"></div>
 </section>
 
@@ -1073,6 +1079,31 @@ $("ofdList").addEventListener("click", async e => {
   } catch (err) { note("ofdNote", "err", esc(err.message)); b.disabled = false; }
 });
 
+/* ======================= dealer <-> client payment link =======================
+   A dealer payment whose Bank is a client's name = the dealer paid that client directly.
+   It is mirrored in Payment Details as Given = amount, Date = payment date (the usual way).
+   The pair is matched by client + amount + date, so each side is written only once. */
+const clientBlock = (S, name) => name ? parseClients(S.clients).find(b => normName(b.name) === normName(name)) : null;
+const same$ = (a, b) => a !== null && b !== null && a !== undefined && b !== undefined && Math.abs(a - b) < 0.5;
+const sameDay = (a, b) => a instanceof Date && b instanceof Date && isoDate(a) === isoDate(b);
+function clientLinkRows(blk, date, amount) {
+  return blk.entries.filter(e => same$(e.given, amount) && sameDay(e.gdate, date)).map(e => e.row);
+}
+function dealerLinkRows(sh, client, date, amount) {
+  const out = [];
+  for (const n of sh.rows.keys()) if (n >= FIRST_DATA_ROW && sameDay(sh.date(n, PAYMENT_COLS.date), date) &&
+    same$(num(sh.value(n, PAYMENT_COLS.amount)), amount) && normName(sh.value(n, PAYMENT_COLS.bank)) === normName(client)) out.push(n);
+  return out.sort((a, b) => a - b);
+}
+function addClientGiven(S, blk, amount, dateVal) {
+  const cl = S.clients, last = cl.lastRow([blk.givenCol, blk.dateCol]), r = last + 1, st = last >= FIRST_DATA_ROW ? last : 0;
+  cl.set(r, blk.givenCol, amount, st); cl.set(r, blk.dateCol, dateVal, st);
+  blk.entries.push({ row: r, given: amount, gdate: dateVal });
+  return r;
+}
+function clearClientRow(S, blk, r) { S.clients.set(r, blk.givenCol, null); S.clients.set(r, blk.dateCol, null); blk.entries = blk.entries.filter(e => e.row !== r); }
+function clearDealerRow(S, k, r) { for (const col of Object.values(PAYMENT_COLS)) S[k].set(r, col, null); }
+
 /* ======================= dealer payments + profit ======================= */
 function renderMoney() {
   const D = L.dealers[dealer]; if (!D) return;
@@ -1115,12 +1146,23 @@ $("btnAddPay").addEventListener("click", async () => {
   $("btnAddPay").disabled = true;
   try {
     const res = await withData(S => {
+      const blk = clientBlock(S, data.bank);
+      if (blk && dealerLinkRows(S[dealer], blk.name, data.date, data.amount).length &&
+          !confirm(`${DEALERS[dealer].name} already has a payment of ${inr(data.amount)} to ${blk.name} on ${fmtDate(data.date)}. Add another one?`)) return { save: false, cancelled: true };
       const sh = S[dealer], last = sh.lastRow(Object.values(PAYMENT_COLS)), row = last + 1;
       for (const [f, col] of Object.entries(PAYMENT_COLS)) sh.set(row, col, data[f], last >= FIRST_DATA_ROW ? last : 0);
-      return { row };
+      let link = null;
+      if (blk) {
+        const haveC = clientLinkRows(blk, data.date, data.amount).length;
+        const haveD = Object.keys(DEALERS).reduce((t, k) => t + (S[k] ? dealerLinkRows(S[k], blk.name, data.date, data.amount).length : 0), 0);
+        if (haveC >= haveD) link = `Already in ${blk.name}'s Clients Payments, so not added again.`;
+        else { const r = addClientGiven(S, blk, data.amount, data.date); link = `Also added to ${blk.name}'s Clients Payments as given ${inr(data.amount)} on ${fmtDate(data.date)} (row ${r}).`; }
+      }
+      return { row, link };
     });
+    if (res.cancelled) { note("payNote", "warn", "Nothing was added."); return; }
     remember("p.", data); refreshDatalists();
-    note("payNote", "ok", `✔ Added in row ${res.row}: ${esc(data.sender)} → ${esc(data.bank)}, ${inr(data.amount)}.`);
+    note("payNote", "ok", `✔ Added in row ${res.row}: ${esc(data.sender)} → ${esc(data.bank)}, ${inr(data.amount)}.` + (res.link ? `<br>🔗 ${esc(res.link)}` : ""));
     resetPayForm();
   } catch (e) { note("payNote", "err", esc(e.message)); }
   finally { $("btnAddPay").disabled = false; }
@@ -1179,13 +1221,14 @@ $("pcSave").addEventListener("click", async () => {
   const dateVal = method === "cut" ? `${DEALERS[$("pcDealer").value].name.split(" ")[0]} Cut` : ($("pcDate").value ? fromIso($("pcDate").value) : today());
   $("pcSave").disabled = true;
   try {
-    await withData(S => {
-      const blk = parseClients(S.clients).find(x => normName(x.name) === normName(b.name));
+    const res = await withData(S => {
+      const blk = clientBlock(S, b.name);
       if (!blk) throw new Error(`${b.name} isn't in Payment Details any more.`);
-      const cl = S.clients, last = cl.lastRow([blk.givenCol, blk.dateCol]), r = last + 1;
-      cl.set(r, blk.givenCol, amount, last >= FIRST_DATA_ROW ? last : 0);
-      cl.set(r, blk.dateCol, dateVal, last >= FIRST_DATA_ROW ? last : 0);
+      if (dateVal instanceof Date && clientLinkRows(blk, dateVal, amount).length && !confirm(`${b.name} already has ${inr(amount)} given on ${fmtDate(dateVal)}. Add another one?`)) return { save: false, cancelled: true };
+      addClientGiven(S, blk, amount, dateVal);
+      return {};
     });
+    if (res.cancelled) { note("pcNote", "warn", "Nothing was added."); return; }
     $("dlgPayClient").close();
     note("clientNote", "ok", `✔ Recorded ${inr(amount)} given to ${esc(b.name)}${method === "cut" ? ` (${esc(dateVal)})` : ""}.`);
   } catch (e) { note("pcNote", "err", esc(e.message)); }
@@ -1214,6 +1257,57 @@ async function settleClient(i) {
     });
     note("clientNote", "ok", `✔ ${esc(b.name)} settled. Their rows are saved in the "Settled history" tab of Payment Details.`);
   } catch (e) { note("clientNote", "err", esc(e.message)); }
+}
+
+/* ---------- payment check: dealer <-> client, and duplicates ---------- */
+function renderPayCheck() {
+  if (!connected) return;
+  const issues = [];
+  const byName = Object.fromEntries(L.clients.map(b => [normName(b.name), b]));
+  for (const [k, D] of Object.entries(L.dealers)) {
+    const seen = {};
+    for (const p of D.payments || []) {
+      if (!p.date) continue;
+      const key = [isoDate(p.date), normName(p.sender), normName(p.bank), p.amount].join("|");
+      (seen[key] = seen[key] || []).push(p.row);
+      const b = byName[normName(p.bank)];
+      if (!b) continue;
+      const dealerSame = (D.payments || []).filter(q => q.date && sameDay(q.date, p.date) && same$(q.amount, p.amount) && normName(q.bank) === normName(b.name)).length;
+      const clientSame = b.entries.filter(e => same$(e.given, p.amount) && sameDay(e.gdate, p.date)).length;
+      if (clientSame < dealerSame && !issues.some(x => x.kind === "missing" && x.k === k && x.row === p.row))
+        issues.push({ kind: "missing", k, row: p.row, client: b.name, date: p.date, amount: p.amount,
+          html: `${esc(DEALERS[k].name)} row ${p.row}: paid <b>${esc(b.name)}</b> ${inr(p.amount)} on ${fmtDate(p.date)}, but it's not in ${esc(b.name)}'s Clients Payments.` });
+    }
+    for (const rows of Object.values(seen)) if (rows.length > 1)
+      issues.push({ kind: "dup", id: `${shownYear()}|${k}|${rows.join(",")}`, html: `${esc(DEALERS[k].name)} rows ${rows.join(", ")} look like the same payment entered ${rows.length} times. If one is a mistake, delete it from Last 5 Payments (or the sheet).` });
+  }
+  for (const b of L.clients) {
+    const seen = {};
+    for (const e of b.entries) if (e.given !== null && e.gdate) { const key = (e.gdate instanceof Date ? isoDate(e.gdate) : String(e.gdate)) + "|" + e.given; (seen[key] = seen[key] || []).push(e.row); }
+    for (const rows of Object.values(seen)) if (rows.length > 1)
+      issues.push({ kind: "dup", id: `c|${normName(b.name)}|${rows.join(",")}`, html: `<b>${esc(b.name)}</b>: payment rows ${rows.join(", ")} have the same amount and date. Check it wasn't entered twice (Details › Edit).` });
+  }
+  let okd = []; try { okd = JSON.parse(lsGet("okdup", "[]")); } catch (e) {}
+  for (let i = issues.length - 1; i >= 0; i--) if (issues[i].id && okd.includes(issues[i].id)) issues.splice(i, 1);
+  $("payCheck").innerHTML = issues.length ? issues.map((x, i) => `<div class="note ${x.kind === "missing" ? "err" : "warn"}">${x.html}${x.kind === "missing" ? ` <button class="btn small" data-fixpay="${i}">Add to ${esc(x.client)}</button>` : ` <button class="btn small ghost" data-okdup="${i}">It's correct</button>`}</div>`).join("")
+    : `<div class="note ok">✔ All good. Every dealer payment to a client is in Clients Payments once, and nothing looks entered twice.</div>`;
+  $("payCheck").onclick = async e => {
+    if (e.target.dataset.okdup !== undefined) {
+      let okd = []; try { okd = JSON.parse(lsGet("okdup", "[]")); } catch (err) {}
+      okd.push(issues[+e.target.dataset.okdup].id); lsSet("okdup", JSON.stringify(okd)); renderPayCheck(); return;
+    }
+    const i = e.target.dataset.fixpay; if (i === undefined) return;
+    const x = issues[+i]; e.target.disabled = true;
+    try {
+      await withData(S => {
+        const blk = clientBlock(S, x.client); if (!blk) throw new Error(`${x.client} isn't in Payment Details.`);
+        const haveD = Object.keys(DEALERS).reduce((t, k) => t + (S[k] ? dealerLinkRows(S[k], blk.name, x.date, x.amount).length : 0), 0);
+        if (clientLinkRows(blk, x.date, x.amount).length >= haveD) return { save: false };
+        addClientGiven(S, blk, x.amount, x.date);
+      });
+      note("clientNote", "ok", `✔ Added ${inr(x.amount)} on ${fmtDate(x.date)} to ${esc(x.client)}'s Clients Payments.`);
+    } catch (err) { note("clientNote", "err", esc(err.message)); e.target.disabled = false; }
+  };
 }
 
 /* statement image for WhatsApp */
@@ -1343,7 +1437,7 @@ $("dealerSeg").addEventListener("click", e => {
   const k = e.target.dataset.dealer; if (!k || k === dealer) return;
   dealer = k; lsSet("dealer", k); renderDealerSeg(); resetOrderForm(); note("orderNote"); renderAll();
 });
-function renderAll() { renderIncomplete(); renderOfd(); renderMoney(); renderClients(); renderLastPays(); renderLastOrders(); }
+function renderAll() { renderIncomplete(); renderOfd(); renderMoney(); renderClients(); renderLastPays(); renderLastOrders(); renderPayCheck(); }
 
 /* ---------- last 5 dealer payments + edit ---------- */
 function renderLastPays() {
@@ -1374,9 +1468,23 @@ async function savePay(del) {
   } else if (!confirm(`Delete this payment from ${DEALERS[k].name}'s row ${row}?`)) return;
   $("epSave").disabled = true;
   try {
-    await withData(S => { for (const [f, col] of Object.entries(PAYMENT_COLS)) S[k].set(row, col, del ? null : data[f]); });
+    const res = await withData(S => {
+      const sh = S[k], old = { date: sh.date(row, PAYMENT_COLS.date), bank: sh.value(row, PAYMENT_COLS.bank), amount: num(sh.value(row, PAYMENT_COLS.amount)) };
+      const oldBlk = clientBlock(S, old.bank), oldLink = oldBlk ? clientLinkRows(oldBlk, old.date, old.amount) : [];
+      for (const [f, col] of Object.entries(PAYMENT_COLS)) sh.set(row, col, del ? null : data[f]);
+      if (del) { if (oldLink.length) { clearClientRow(S, oldBlk, oldLink[0]); return { link: `Also removed from ${oldBlk.name}'s Clients Payments.` }; } return {}; }
+      const newBlk = clientBlock(S, data.bank);
+      if (oldLink.length && newBlk && oldBlk.name === newBlk.name) {
+        S.clients.set(oldLink[0], newBlk.givenCol, data.amount); S.clients.set(oldLink[0], newBlk.dateCol, data.date);
+        return { link: `${newBlk.name}'s Clients Payments updated to match.` };
+      }
+      const msg = [];
+      if (oldLink.length) { clearClientRow(S, oldBlk, oldLink[0]); msg.push(`removed from ${oldBlk.name}`); }
+      if (newBlk && !clientLinkRows(newBlk, data.date, data.amount).length) { addClientGiven(S, newBlk, data.amount, data.date); msg.push(`added to ${newBlk.name}`); }
+      return { link: msg.length ? `Clients Payments: ${msg.join(", ")}.` : "" };
+    });
     $("dlgEditPay").close();
-    note("lastPayNote", "ok", `✔ ${del ? "Deleted" : "Updated"} the payment in ${esc(DEALERS[k].name)}'s row ${row}.`);
+    note("lastPayNote", "ok", `✔ ${del ? "Deleted" : "Updated"} the payment in ${esc(DEALERS[k].name)}'s row ${row}.` + (res.link ? `<br>🔗 ${esc(res.link)}` : ""));
   } catch (e) { note("epNote", "err", esc(e.message)); }
   finally { $("epSave").disabled = false; }
 }
@@ -1408,14 +1516,21 @@ async function saveGiven(del) {
   } else if (!confirm(`Delete this payment given to ${name}?`)) return;
   $("egSave").disabled = true;
   try {
-    await withData(S => {
-      const blk = parseClients(S.clients).find(x => normName(x.name) === normName(name));
+    const res = await withData(S => {
+      const blk = clientBlock(S, name);
       if (!blk) throw new Error(`${name} isn't in Payment Details any more.`);
+      const oldAmt = num(S.clients.value(row, blk.givenCol)), oldDate = S.clients.date(row, blk.dateCol);
+      let linked = null;   // the dealer payment this entry mirrors, if any
+      if (oldDate) for (const k of Object.keys(DEALERS)) if (S[k]) { const r = dealerLinkRows(S[k], blk.name, oldDate, oldAmt); if (r.length) { linked = { k, row: r[0] }; break; } }
       S.clients.set(row, blk.givenCol, del ? null : amount);
       S.clients.set(row, blk.dateCol, del ? null : dateVal);
+      if (!linked) return {};
+      if (del || !(dateVal instanceof Date)) { clearDealerRow(S, linked.k, linked.row); return { link: `Also removed from ${DEALERS[linked.k].name}'s payments (row ${linked.row}).` }; }
+      S[linked.k].set(linked.row, PAYMENT_COLS.date, dateVal); S[linked.k].set(linked.row, PAYMENT_COLS.amount, amount);
+      return { link: `${DEALERS[linked.k].name}'s payment row ${linked.row} updated to match.` };
     });
     $("dlgEditGiven").close();
-    note("clientNote", "ok", `✔ ${del ? "Deleted" : "Updated"} the payment given to ${esc(name)}.`);
+    note("clientNote", "ok", `✔ ${del ? "Deleted" : "Updated"} the payment given to ${esc(name)}.` + (res.link ? `<br>🔗 ${esc(res.link)}` : ""));
   } catch (e) { note("egNote", "err", esc(e.message)); }
   finally { $("egSave").disabled = false; }
 }
