@@ -196,3 +196,6 @@ function newYear_(ctx, to) {
   });
   return to;
 }
+
+/* Run this once from the editor to grant Drive access. */
+function authorize() { Logger.log(root_().getName() + " found"); }
