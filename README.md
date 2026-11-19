@@ -2,7 +2,7 @@
 
 A phone-friendly web app for logging online orders, deliveries and payments into Google Sheets.
 
-- **Dealer picker** (Rahul Yadav / Sourav Mondal) and a **year picker**. Each dealer has one sheet per year.
+- **Dealer picker** and a **year picker**. Each dealer has one sheet per year.
 - **Orders:** save an order when you place it (status Ordered). When the out-for-delivery message comes, tap the saved row (tick several rows for a multi-phone package) and paste the message to complete it.
 - **Out For Delivery:** one tap marks a package Delivered and adds Amount + Commission cut to the client whose card paid.
 - **Dealer Payments:** what each dealer still owes (delivered orders only), payments received, and **Start next year**, which creates next year's sheets and carries LEFT over as "Previous Year Due".
