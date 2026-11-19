@@ -133,6 +133,7 @@
   <button data-tab="clients">Clients Payments</button>
   <button data-tab="profit">Profit</button>
   <button data-tab="track">Tracking Search</button>
+  <button data-tab="last">Last 5 Orders</button>
 </nav>
 
 <!-- ============ ORDERS ============ -->
@@ -188,6 +189,12 @@
     <div id="payNote"></div>
   </div>
   <div class="panel">
+    <h2>Last 5 Payments</h2>
+    <p class="hint">Newest entry first, for both dealers. Tap Edit to fix a wrong entry.</p>
+    <div id="lastPays"><div class="empty">Press Connect to see payments.</div></div>
+    <div id="lastPayNote"></div>
+  </div>
+  <div class="panel">
     <h2>New Year Sheets</h2>
     <p class="hint">Creates next year's folder with a fresh sheet for each dealer (same layout, no orders), and carries this year's LEFT over as a negative "Previous Year Due". Payment Details stays one file.</p>
     <button class="btn ghost" id="btnNewYear">Start next year</button>
@@ -217,6 +224,15 @@
     <h2 id="profitTitle">Month-Wise Profit</h2>
     <p class="hint">Delivered orders only, by order date. Profit = Commission + Cashback + Bulk extra. Net profit = Profit − Commission cut.</p>
     <div id="profitBox"><div class="empty">Press Connect to see your profits.</div></div>
+  </div>
+</section>
+
+<!-- ============ LAST 5 ORDERS ============ -->
+<section class="tab" id="tab-last">
+  <div class="panel">
+    <h2>Last 5 Orders</h2>
+    <p class="hint">The 5 orders with the latest delivery dates across both dealers, so you can see where your last entry was.</p>
+    <div id="lastOrders"><div class="empty">Press Connect to see your orders.</div></div>
   </div>
 </section>
 
@@ -258,6 +274,33 @@
   <div class="field" id="pcDealerBox" style="display:none"><label for="pcDealer">Deducted From Which Dealer's Payment</label><select id="pcDealer"></select></div>
   <div id="pcNote"></div>
   <div class="row"><button class="btn ghost" data-close>Cancel</button><button class="btn" id="pcSave">Save</button></div>
+</dialog>
+
+<dialog id="dlgEditPay">
+  <h3 id="epTitle">Edit Payment</h3>
+  <div class="grid">
+    <div class="field"><label class="req" for="epDate">Payment Date</label><input id="epDate" type="date"></div>
+    <div class="field"><label class="req" for="epSender">Sender</label><input id="epSender" list="dl-p.sender" autocomplete="off"></div>
+    <div class="field"><label class="req" for="epBank">Bank</label><input id="epBank" list="dl-p.bank" autocomplete="off"></div>
+    <div class="field"><label class="req" for="epAmount">Amount Got</label><input id="epAmount" inputmode="decimal" autocomplete="off"></div>
+  </div>
+  <div id="epNote"></div>
+  <div class="row"><button class="btn ghost" id="epDelete" style="margin-right:auto;color:var(--err)">Delete entry</button><button class="btn ghost" data-close>Cancel</button><button class="btn" id="epSave">Save changes</button></div>
+</dialog>
+
+<dialog id="dlgEditGiven">
+  <h3 id="egTitle">Edit Payment Given</h3>
+  <div class="grid">
+    <div class="field"><label class="req" for="egAmount">Amount Given</label><input id="egAmount" inputmode="decimal" autocomplete="off"></div>
+    <div class="field"><label for="egDate">Date</label><input id="egDate" type="date"></div>
+  </div>
+  <div class="radio">
+    <label><input type="radio" name="egMethod" value="paid" checked> Paid (cash / UPI / bank)</label>
+    <label><input type="radio" name="egMethod" value="cut"> Settled via dealer cut</label>
+  </div>
+  <div class="field" id="egDealerBox" style="display:none"><label for="egDealer">Deducted From Which Dealer's Payment</label><select id="egDealer"></select></div>
+  <div id="egNote"></div>
+  <div class="row"><button class="btn ghost" id="egDelete" style="margin-right:auto;color:var(--err)">Delete entry</button><button class="btn ghost" data-close>Cancel</button><button class="btn" id="egSave">Save changes</button></div>
 </dialog>
 
 <dialog id="dlgAddClient">
@@ -503,6 +546,9 @@ function learnDealer(sh) {
     }
   }
   D.money = { toGet, got, due: toGet - got, pending };
+  D.payments = [];
+  for (const n of nums) if (n >= FIRST_DATA_ROW && Object.values(PAYMENT_COLS).some(c => sh.value(n, c) !== null))
+    D.payments.push({ row: n, date: sh.date(n, PAYMENT_COLS.date), sender: sh.value(n, PAYMENT_COLS.sender), bank: sh.value(n, PAYMENT_COLS.bank), amount: num(sh.value(n, PAYMENT_COLS.amount)) });
   return D;
 }
 
@@ -1095,7 +1141,7 @@ function renderClients() {
   $("clientsSub").textContent = `${C.filter(b => Math.round(b.left) > 0).length} of ${C.length} clients still have money to get.` + (adv ? ` You will get back ${inr(adv)} from clients you gave extra (net ${inr(total)}).` : "");
   $("clientCards").innerHTML = C.map((b, i) => {
     const zero = Math.round(b.left) === 0, extra = Math.round(b.left) < 0;
-    const rows = b.entries.map(e => `<tr><td>${fmtDate(e.od)}</td><td class="num">${e.amt !== null ? inr(e.amt) : ""}</td><td class="num">${e.given !== null ? inr(e.given) : ""}</td><td>${esc(fmtDate(e.gdate))}</td></tr>`).join("");
+    const rows = b.entries.map(e => `<tr><td>${fmtDate(e.od)}</td><td class="num">${e.amt !== null ? inr(e.amt) : ""}</td><td class="num">${e.given !== null ? inr(e.given) : ""}</td><td>${esc(fmtDate(e.gdate))}</td><td>${e.given !== null || e.gdate ? `<button class="btn small ghost" data-editgiven="${i}:${e.row}">Edit</button>` : ""}</td></tr>`).join("");
     return `<div class="ccard ${zero ? "zero" : extra ? "extra" : ""}">
       <h3>${esc(b.name)}</h3>
       <div class="left">${inr(b.left)}</div>
@@ -1105,7 +1151,7 @@ function renderClients() {
         <button class="btn small ghost" data-stmt="${i}">Share statement</button>
         <button class="btn small ${zero ? "" : "ghost"}" data-settle="${i}" ${b.entries.length ? "" : "disabled"}>Mark settled</button>
       </div>
-      ${b.entries.length ? `<details><summary>Details</summary><table class="list"><tr><th>Order date</th><th class="num">Transaction</th><th class="num">Given</th><th>Date</th></tr>${rows}</table></details>` : ""}
+      ${b.entries.length ? `<details><summary>Details</summary><table class="list"><tr><th>Order date</th><th class="num">Transaction</th><th class="num">Given</th><th>Date</th><th></th></tr>${rows}</table></details>` : ""}
     </div>`; }).join("") || `<div class="empty">No clients found in Payment Details.</div>`;
 }
 $("clientCards").addEventListener("click", e => {
@@ -1113,6 +1159,7 @@ $("clientCards").addEventListener("click", e => {
   if (t.dataset.pay) openPay(+t.dataset.pay);
   if (t.dataset.stmt) shareStatement(L.clients[+t.dataset.stmt]);
   if (t.dataset.settle) settleClient(+t.dataset.settle);
+  if (t.dataset.editgiven) { const [i, row] = t.dataset.editgiven.split(":").map(Number); openEditGiven(i, row); }
 });
 
 let payIdx = null;
@@ -1296,7 +1343,97 @@ $("dealerSeg").addEventListener("click", e => {
   const k = e.target.dataset.dealer; if (!k || k === dealer) return;
   dealer = k; lsSet("dealer", k); renderDealerSeg(); resetOrderForm(); note("orderNote"); renderAll();
 });
-function renderAll() { renderIncomplete(); renderOfd(); renderMoney(); renderClients(); }
+function renderAll() { renderIncomplete(); renderOfd(); renderMoney(); renderClients(); renderLastPays(); renderLastOrders(); }
+
+/* ---------- last 5 dealer payments + edit ---------- */
+function renderLastPays() {
+  if (!connected) return;
+  $("lastPays").innerHTML = Object.entries(DEALERS).map(([k, d]) => {
+    const P = ((L.dealers[k] || {}).payments || []).slice().sort((a, b) => b.row - a.row).slice(0, 5);
+    return `<h3 style="margin:12px 0 6px;font-size:15px;color:var(--dark)">${esc(d.name)}</h3>` + (P.length ? `<div class="scroll"><table class="list"><tr><th>Row</th><th>Date</th><th>Sender</th><th class="opt">Bank</th><th class="num">Amount</th><th></th></tr>` +
+      P.map(p => `<tr><td>${p.row}</td><td>${fmtDate(p.date)}</td><td>${esc(p.sender || "")}</td><td class="opt">${esc(p.bank || "")}</td><td class="num"><b>${p.amount !== null ? inr(p.amount) : ""}</b></td><td><button class="btn small ghost" data-editpay="${k}:${p.row}">Edit</button></td></tr>`).join("") + `</table></div>`
+      : `<div class="empty">No payments yet.</div>`);
+  }).join("");
+}
+let editPay = null;
+$("lastPays").addEventListener("click", e => {
+  const t = e.target.dataset.editpay; if (!t) return;
+  const [k, row] = t.split(":"); const p = L.dealers[k].payments.find(x => x.row === +row); if (!p) return;
+  editPay = { k, row: +row };
+  $("epTitle").textContent = `Edit Payment · ${DEALERS[k].name} · Row ${row}`;
+  $("epDate").value = p.date ? isoDate(p.date) : ""; $("epSender").value = p.sender || ""; $("epBank").value = p.bank || ""; $("epAmount").value = p.amount ?? "";
+  $("epNote").innerHTML = ""; $("dlgEditPay").showModal();
+});
+async function savePay(del) {
+  const { k, row } = editPay; let data = null;
+  if (!del) {
+    try { data = { date: $("epDate").value ? fromIso($("epDate").value) : null, sender: $("epSender").value.trim(), bank: $("epBank").value.trim(), amount: parseNumber($("epAmount").value) }; }
+    catch (e) { note("epNote", "err", "Enter a valid amount."); return; }
+    if (!data.date || !data.sender || !data.bank) { note("epNote", "err", "Fill in date, sender and bank."); return; }
+  } else if (!confirm(`Delete this payment from ${DEALERS[k].name}'s row ${row}?`)) return;
+  $("epSave").disabled = true;
+  try {
+    await withData(S => { for (const [f, col] of Object.entries(PAYMENT_COLS)) S[k].set(row, col, del ? null : data[f]); });
+    $("dlgEditPay").close();
+    note("lastPayNote", "ok", `✔ ${del ? "Deleted" : "Updated"} the payment in ${esc(DEALERS[k].name)}'s row ${row}.`);
+  } catch (e) { note("epNote", "err", esc(e.message)); }
+  finally { $("epSave").disabled = false; }
+}
+$("epSave").addEventListener("click", () => savePay(false));
+$("epDelete").addEventListener("click", () => savePay(true));
+
+/* ---------- edit a payment given to a client ---------- */
+let editGiven = null;
+function openEditGiven(i, row) {
+  const b = L.clients[i], e = b.entries.find(x => x.row === row); if (!e) return;
+  editGiven = { name: b.name, row };
+  $("egTitle").textContent = `Edit Payment Given · ${b.name}`;
+  $("egAmount").value = e.given ?? "";
+  const isCut = e.gdate && !(e.gdate instanceof Date);
+  $("egDate").value = e.gdate instanceof Date ? isoDate(e.gdate) : "";
+  $("egDealer").innerHTML = Object.entries(DEALERS).map(([k, d]) => `<option value="${k}" ${isCut && String(e.gdate).toLowerCase().startsWith(d.name.split(" ")[0].toLowerCase()) ? "selected" : ""}>${esc(d.name)}</option>`).join("");
+  document.querySelector(`input[name=egMethod][value=${isCut ? "cut" : "paid"}]`).checked = true;
+  $("egDealerBox").style.display = isCut ? "block" : "none";
+  $("egNote").innerHTML = ""; $("dlgEditGiven").showModal();
+}
+document.querySelectorAll("input[name=egMethod]").forEach(r => r.addEventListener("change", () => { $("egDealerBox").style.display = document.querySelector("input[name=egMethod]:checked").value === "cut" ? "block" : "none"; }));
+async function saveGiven(del) {
+  const { name, row } = editGiven; let amount = null, dateVal = null;
+  if (!del) {
+    try { amount = parseNumber($("egAmount").value); } catch (e) { note("egNote", "err", "Enter a valid amount."); return; }
+    const cut = document.querySelector("input[name=egMethod]:checked").value === "cut";
+    dateVal = cut ? `${DEALERS[$("egDealer").value].name.split(" ")[0]} Cut` : ($("egDate").value ? fromIso($("egDate").value) : null);
+    if (!dateVal) { note("egNote", "err", "Pick the date."); return; }
+  } else if (!confirm(`Delete this payment given to ${name}?`)) return;
+  $("egSave").disabled = true;
+  try {
+    await withData(S => {
+      const blk = parseClients(S.clients).find(x => normName(x.name) === normName(name));
+      if (!blk) throw new Error(`${name} isn't in Payment Details any more.`);
+      S.clients.set(row, blk.givenCol, del ? null : amount);
+      S.clients.set(row, blk.dateCol, del ? null : dateVal);
+    });
+    $("dlgEditGiven").close();
+    note("clientNote", "ok", `✔ ${del ? "Deleted" : "Updated"} the payment given to ${esc(name)}.`);
+  } catch (e) { note("egNote", "err", esc(e.message)); }
+  finally { $("egSave").disabled = false; }
+}
+$("egSave").addEventListener("click", () => saveGiven(false));
+$("egDelete").addEventListener("click", () => saveGiven(true));
+
+/* ---------- last 5 orders by delivery date ---------- */
+function renderLastOrders() {
+  if (!connected) return;
+  const all = [];
+  for (const [k, D] of Object.entries(L.dealers)) for (const r of Object.values(D.rows)) if (r.deliveryObj) all.push({ k, r });
+  all.sort((a, b) => (b.r.deliveryObj - a.r.deliveryObj) || (b.r.row - a.r.row));
+  const top = all.slice(0, 5);
+  $("lastOrders").innerHTML = top.length ? top.map(({ k, r }, i) => `<div class="panel" style="margin:10px 0;border-left:4px solid ${i === 0 ? "var(--light)" : "var(--mid)"}">
+      <h2>${i === 0 ? "🆕 " : ""}${fmtDate(r.deliveryObj)} · ${esc(DEALERS[k].name)} · Row ${r.row}</h2>
+      <table class="list">${[["Delivery Status", r.status], ["Parcel Name", r.name], ["Model", r.model || r.platform], ["Tracking ID", r.tracking], ["Card Details", r.card], ["Amount Paid By", r.paid_by], ["Amount", r.amount ? inr(num(r.amount)) : ""], ["Order Date", fmtDate(r.dateObj)]]
+        .filter(([, v]) => v).map(([l, v]) => `<tr><td style="color:#5b6866;width:38%">${l}</td><td><b>${esc(v)}</b></td></tr>`).join("")}</table></div>`).join("")
+    : `<div class="empty">No orders with a delivery date yet.</div>`;
+}
 document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x === b));
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.id === "tab-" + b.dataset.tab));
