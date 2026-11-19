@@ -9,123 +9,153 @@
   * { box-sizing:border-box; }
   html, body { height:100%; margin:0; }
   body { font:15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; display:flex; flex-direction:column; background:var(--bg); color:#15201e; }
-  .brand { margin:0; font-size:clamp(24px, 6vw, 32px); line-height:1.1; letter-spacing:.01em; font-weight:800; }
-  .avatar { width:46px !important; height:46px !important; font-size:17px; }
+  header { background:var(--dark); color:#fff; padding:10px 16px 12px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+  .who { display:flex; align-items:center; gap:10px; min-width:0; }
+  .avatar { width:46px; height:46px; border-radius:50%; background:var(--light); color:#063; display:grid; place-items:center; font-weight:800; font-size:17px; flex:none; }
+  .brand { margin:0; font-size:clamp(24px, 6vw, 32px); line-height:1.1; font-weight:800; }
+  .beta { font-size:11px; background:#ffd54f; color:#5d4300; border-radius:8px; padding:1px 7px; vertical-align:middle; margin-left:6px; font-weight:800; }
+  .who small { display:block; opacity:.85; font-size:12.5px; }
+  .hright { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .seg { display:inline-flex; background:rgba(255,255,255,.14); border-radius:20px; padding:3px; }
+  .seg button { background:none; border:0; color:#d9f3ee; font:inherit; font-weight:700; padding:6px 13px; border-radius:17px; cursor:pointer; }
+  .seg button.on { background:#fff; color:var(--dark); }
+  .yearsel { background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:18px; padding:7px 10px; font:inherit; font-weight:700; cursor:pointer; }
+  .yearsel option { color:#15201e; }
+  .yearbar { max-width:1000px; margin:0 auto 14px; border-radius:10px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; font-weight:600; }
+  .yearbar.new { background:#e8f5e9; border:2px solid #43a047; color:#1b5e20; }
+  .yearbar.old { background:#fff8e1; border:2px solid #ffb300; color:#6d4c00; }
+  header .hbtn { background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:18px; padding:7px 13px; font:inherit; font-size:13.5px; cursor:pointer; }
+  header .hbtn.primary { background:var(--light); color:#063; font-weight:700; }
+  nav { display:flex; background:var(--mid); padding:0 6px; overflow-x:auto; }
+  nav button { background:none; border:0; color:#d9f3ee; font:inherit; font-weight:600; padding:11px 14px; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; }
+  nav button.active { color:#fff; border-bottom-color:#fff; }
+  .badge { background:#fff; color:var(--dark); border-radius:10px; padding:0 7px; font-size:12px; margin-left:4px; }
+  .tab { display:none; flex:1; overflow-y:auto; padding:16px; }
+  .tab.active { display:block; }
+  .panel { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:16px; max-width:1000px; margin:0 auto 14px; }
+  .panel h2 { margin:0 0 4px; font-size:16px; color:var(--dark); }
+  .hint { font-size:13px; color:#5b6866; margin:0 0 10px; }
+  textarea.paste { width:100%; min-height:130px; border:1.5px dashed #9fb7b2; border-radius:8px; padding:10px; font:14px/1.45 inherit; background:#fbfdfc; resize:vertical; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px 14px; }
+  .sect { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--dark); margin:4px 0 8px; padding-bottom:5px; border-bottom:2px solid #d5ebe4; }
+  .sect.msg { margin-top:28px; color:#0c5f7a; border-bottom-color:#cfe6ef; }
+  .hidden { display:none !important; }
+  .field.missing input { background:#fdecea; border-color:#ef9a9a; }
+  .field.missing label { color:#c62828; }
+  .field.missing label::after { content:" · missing"; font-weight:500; font-size:11.5px; }
+  .field label { display:block; font-size:12.5px; font-weight:600; color:#40514e; margin-bottom:3px; }
+  .field input, .field select { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; font:inherit; background:#fff; }
+  .field input:focus { outline:2px solid #9be0d0; border-color:var(--mid); }
+  .field.wide { grid-column:1 / -1; }
+  .field.filled input { background:#effaf5; border-color:#9fd8c4; }
+  .field.locked input { background:#e4f1ec; color:#30443f; cursor:not-allowed; }
+  .field small { font-size:11.5px; color:#6b7a77; }
+  .lock { font-weight:500; font-size:11.5px; color:#2f7d68; margin-left:6px; }
+  .lock a { color:#128c7e; cursor:pointer; text-decoration:underline; }
+  .req::after { content:" *"; color:var(--err); }
+  .actions { display:flex; gap:10px; margin-top:14px; align-items:center; flex-wrap:wrap; }
+  .btn { border:0; border-radius:18px; padding:9px 18px; font:inherit; font-weight:600; cursor:pointer; background:var(--mid); color:#fff; }
+  .btn.ghost { background:#e3e9e7; color:#2b3a37; }
+  .btn.warn { background:#fb8c00; }
+  .btn.small { padding:6px 12px; font-size:13.5px; }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .note { border-radius:8px; padding:9px 12px; margin-top:10px; font-size:14px; }
+  .note.ok { background:#e8f5e9; color:var(--ok); } .note.err { background:#fdecea; color:var(--err); } .note.warn { background:#fff4e0; color:var(--warn); } .note.info { background:#e7f3f8; color:#0c5f7a; }
+  .pick { margin:4px 6px 0 0; }
+  .mode { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#e7f3f8; color:#0c5f7a; border-radius:8px; padding:9px 12px; margin-bottom:12px; font-weight:600; }
+  .inc { display:flex; flex-direction:column; gap:6px; }
+  .incrow { display:flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:9px; padding:8px 10px; cursor:pointer; background:#fbfdfc; }
+  .incrow .tick { width:20px; height:20px; accent-color:var(--mid); flex:none; cursor:pointer; }
+  .incrow:hover { border-color:var(--mid); }
+  .incrow.sel { border:2px solid var(--mid); background:#effaf5; }
+  .incrow.cand { border-color:#fb8c00; background:#fff8ec; }
+  .rowno { font-weight:800; color:#fff; background:var(--mid); border-radius:8px; padding:4px 9px; font-size:13.5px; white-space:nowrap; }
+  .incinfo { flex:1; min-width:0; font-size:13.5px; }
+  .incinfo b { font-size:14px; }
+  .incinfo .sub { color:#5b6866; }
+  table.list { width:100%; border-collapse:collapse; font-size:14px; }
+  table.list th { text-align:left; font-size:12.5px; color:#5b6866; border-bottom:1px solid var(--line); padding:6px 8px; }
+  table.list td { padding:8px; border-bottom:1px solid #edf1f0; vertical-align:middle; }
+  table.list input[type=date] { padding:5px; border:1px solid var(--line); border-radius:6px; font:inherit; font-size:13px; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  tr.total td { font-weight:800; border-top:2px solid var(--line); }
+  .scroll { overflow-x:auto; }
+  .empty { text-align:center; color:#6b7a77; padding:20px; }
   .duebox { background:linear-gradient(135deg, #fff3e0, #ffe0b2); border:2px solid #fb8c00; border-radius:12px; padding:16px 18px; max-width:1000px; margin:0 auto 14px; }
+  .duebox.owe { background:linear-gradient(135deg, #fdecea, #ffd6d1); border-color:#e53935; }
   .duebox .lbl { font-size:14px; font-weight:700; color:#8a4b00; text-transform:uppercase; letter-spacing:.05em; }
+  .duebox.owe .lbl { color:#8e1c17; }
   .duebox .amt { font-size:clamp(34px, 9vw, 46px); font-weight:800; color:#d84315; line-height:1.15; margin:2px 0 6px; font-variant-numeric:tabular-nums; }
+  .duebox.owe .amt { color:#c62828; }
   .duebox .sub { font-size:13.5px; color:#6d4c1f; }
   .kpis { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px; }
   .kpi { background:#f4faf8; border:1px solid #d5ebe4; border-radius:10px; padding:10px 12px; }
   .kpi .lbl { font-size:12.5px; color:#5b6866; font-weight:600; } .kpi .val { font-size:22px; font-weight:800; color:var(--dark); font-variant-numeric:tabular-nums; }
   .kpi.net .val { color:var(--ok); }
-  .scroll { overflow-x:auto; }
-  table.list td.num, table.list th.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
-  table.list tr.total td { font-weight:800; border-top:2px solid var(--line); }
   .bar { height:8px; border-radius:4px; background:var(--mid); min-width:2px; }
   .neg { color:var(--err) !important; }
-  @media (max-width:600px) { .opt { display:none; } table.list td, table.list th { padding:7px 5px; } .tab { padding:10px; } .panel { padding:13px; } }
-  header { background:var(--dark); color:#fff; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; gap:10px; flex-wrap:wrap; }
-  .who { display:flex; align-items:center; gap:10px; min-width:0; }
-  .avatar { width:38px; height:38px; border-radius:50%; background:var(--light); display:grid; place-items:center; font-weight:700; flex:none; }
-  .who small { display:block; opacity:.85; font-size:12.5px; }
-  header button, .hbtn { background:rgba(255,255,255,.14); color:#fff; border:0; border-radius:18px; padding:7px 13px; font:inherit; font-size:13.5px; cursor:pointer; }
-  header button:hover { background:rgba(255,255,255,.25); }
-  header button.primary { background:var(--light); color:#063; font-weight:600; }
-  nav { display:flex; background:var(--mid); padding:0 10px; overflow-x:auto; }
-  nav button { background:none; border:0; color:#d9f3ee; font:inherit; font-weight:600; padding:11px 16px; cursor:pointer; border-bottom:3px solid transparent; white-space:nowrap; }
-  nav button.active { color:#fff; border-bottom-color:#fff; }
-  .badge { background:#fff; color:var(--dark); border-radius:10px; padding:0 7px; font-size:12px; margin-left:4px; }
-  .tab { display:none; flex:1; overflow-y:auto; padding:16px; }
-  .tab.active { display:block; }
-  #tab-chat.active { display:flex; flex-direction:column; padding:0; overflow:hidden; }
-  .panel { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:16px; max-width:1000px; margin:0 auto 14px; }
-  .panel h2 { margin:0 0 4px; font-size:16px; color:var(--dark); }
-  .hint { font-size:13px; color:#5b6866; margin:0 0 10px; }
-  textarea.paste { width:100%; min-height:150px; border:1.5px dashed #9fb7b2; border-radius:8px; padding:10px; font:14px/1.45 inherit; background:#fbfdfc; resize:vertical; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px 14px; }
-  .field label { display:block; font-size:12.5px; font-weight:600; color:#40514e; margin-bottom:3px; }
-  .field input { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; font:inherit; background:#fff; }
-  .field input:focus { outline:2px solid #9be0d0; border-color:var(--mid); }
-  .field.wide { grid-column:1 / -1; }
-  .field.filled input { background:#effaf5; border-color:#9fd8c4; }
-  .field.locked input { background:#e4f1ec; color:#30443f; cursor:not-allowed; }
-  .lock { font-weight:500; font-size:11.5px; color:#2f7d68; margin-left:6px; }
-  .lock a { color:#128c7e; cursor:pointer; text-decoration:underline; }
-  .pick { margin:4px 6px 0 0; }
-  .field small { font-size:11.5px; color:#6b7a77; }
-  .req::after { content:" *"; color:var(--err); }
-  .actions { display:flex; gap:10px; margin-top:14px; align-items:center; flex-wrap:wrap; }
-  .btn { border:0; border-radius:18px; padding:9px 18px; font:inherit; font-weight:600; cursor:pointer; background:var(--mid); color:#fff; }
-  .btn.ghost { background:#e3e9e7; color:#2b3a37; }
-  .btn.small { padding:6px 12px; font-size:13.5px; }
-  .btn:disabled { opacity:.5; cursor:default; }
-  .note { border-radius:8px; padding:9px 12px; margin-top:10px; font-size:14px; }
-  .note.ok { background:#e8f5e9; color:var(--ok); } .note.err { background:#fdecea; color:var(--err); } .note.warn { background:#fff4e0; color:var(--warn); }
-  table.list { width:100%; border-collapse:collapse; font-size:14px; }
-  table.list th { text-align:left; font-size:12.5px; color:#5b6866; border-bottom:1px solid var(--line); padding:6px 8px; }
-  table.list td { padding:8px; border-bottom:1px solid #edf1f0; vertical-align:middle; }
-  table.list input[type=date] { padding:5px; border:1px solid var(--line); border-radius:6px; font:inherit; font-size:13px; }
-  .empty { text-align:center; color:#6b7a77; padding:20px; }
-  /* chat */
-  #chat { flex:1; overflow-y:auto; padding:16px 4vw 8px; display:flex; flex-direction:column; gap:8px; background:#ece5dd; }
-  .msg { max-width:min(680px, 88%); padding:8px 11px 6px; border-radius:9px; box-shadow:0 1px .5px rgba(0,0,0,.13); background:#fff; white-space:pre-wrap; word-wrap:break-word; }
-  .msg.me { align-self:flex-end; background:#dcf8c6; }
-  .msg.bot { align-self:flex-start; white-space:normal; }
-  .msg time { display:block; text-align:right; font-size:11px; color:#667; margin-top:2px; }
-  .card { border:1px solid #dde; border-left:4px solid var(--mid); border-radius:6px; padding:7px 9px; margin:6px 0; background:#fafbfb; }
-  .card.bad { border-left-color:var(--err); background:#fff6f6; }
-  .card h4 { margin:0 0 4px; font-size:12.5px; letter-spacing:.04em; color:var(--dark); }
-  .card.bad h4 { color:var(--err); }
-  .card table { border-collapse:collapse; font-size:13.5px; } .card td { padding:1px 10px 1px 0; vertical-align:top; } .card td:first-child { color:#667; white-space:nowrap; }
-  .card ul { margin:4px 0 0; padding-left:18px; color:var(--err); font-size:13.5px; }
-  .btns { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
-  .ok { color:var(--ok); } .err { color:var(--err); }
-  .chatbar { display:flex; gap:8px; padding:8px 10px; background:#f0f0f0; align-items:flex-end; }
-  .chatbar textarea { flex:1; resize:none; border:0; border-radius:20px; padding:10px 15px; font:inherit; min-height:44px; max-height:40vh; outline:none; }
-  .chatbar .send { width:46px; height:46px; border-radius:50%; border:0; background:var(--mid); color:#fff; font-size:19px; cursor:pointer; flex:none; }
-  .chattop { display:flex; justify-content:flex-end; padding:6px 10px; background:#f7f7f7; border-bottom:1px solid #e3e3e3; }
+  .clients { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:12px; max-width:1000px; margin:0 auto; }
+  .ccard { background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:14px; border-top:5px solid var(--err); }
+  .ccard.zero { border-top-color:var(--ok); }
+  .ccard h3 { margin:0; font-size:17px; }
+  .ccard .left { font-size:30px; font-weight:800; color:var(--err); font-variant-numeric:tabular-nums; }
+  .ccard.zero .left { color:var(--ok); }
+  .ccard.extra { border-top-color:#7b1fa2; background:#faf5fc; } .ccard.extra .left { color:#7b1fa2; }
+  .ccard .meta { font-size:13px; color:#5b6866; margin-bottom:8px; }
+  .ccard details { margin-top:8px; font-size:13.5px; }
+  .ccard summary { cursor:pointer; color:var(--mid); font-weight:600; }
+  .ccard table td, .ccard table th { padding:4px 6px; font-size:13px; }
   dialog { border:0; border-radius:12px; padding:18px; width:min(560px, 94vw); box-shadow:0 10px 40px rgba(0,0,0,.3); }
   dialog h3 { margin:0 0 8px; color:var(--dark); }
-  dialog textarea { width:100%; min-height:110px; font:13px/1.4 ui-monospace, Consolas, monospace; padding:8px; border:1px solid #ccc; border-radius:6px; }
-  dialog pre { background:#f4f6f6; border-radius:6px; padding:8px 10px; margin:4px 0 10px; font-size:13px; white-space:pre-wrap; }
+  dialog textarea { width:100%; min-height:100px; font:13px/1.4 ui-monospace, Consolas, monospace; padding:8px; border:1px solid #ccc; border-radius:6px; }
   dialog .row { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; flex-wrap:wrap; }
-  dialog .tplrow { display:flex; justify-content:space-between; align-items:center; }
+  .radio { display:flex; gap:14px; flex-wrap:wrap; margin:6px 0; font-size:14px; }
+  @media (max-width:600px) { .opt { display:none; } table.list td, table.list th { padding:7px 5px; } .tab { padding:10px; } .panel { padding:13px; } header { padding:10px 12px; } }
 </style>
 </head>
 <body>
 <header>
   <div class="who">
     <div class="avatar">DD</div>
-    <div><h1 class="brand">Digital Den</h1><small>Order Logger · <span id="fileStatus">Not connected. Press Connect</span></small></div>
+    <div><h1 class="brand">Digital Den</h1><small id="fileStatus">Not connected. Press Connect</small></div>
   </div>
-  <div>
-    <button id="btnConnect" class="primary">Connect</button>
-    <button id="btnSettings">Shortcuts</button>
+  <div class="hright">
+    <select id="yearSel" class="yearsel" title="Year"></select>
+    <div class="seg" id="dealerSeg"></div>
+    <button class="hbtn primary" id="btnConnect">Connect</button>
+    <button class="hbtn" id="btnSettings">Shortcuts</button>
   </div>
 </header>
 <nav>
-  <button data-tab="new" class="active">New delivery</button>
-  <button data-tab="ofd">Out for delivery <span class="badge" id="ofdCount">0</span></button>
-  <button data-tab="pay">Payments</button>
+  <button data-tab="orders" class="active">Orders <span class="badge" id="incCount">0</span></button>
+  <button data-tab="ofd">Out For Delivery <span class="badge" id="ofdCount">0</span></button>
+  <button data-tab="pay">Dealer Payments</button>
+  <button data-tab="clients">Clients Payments</button>
   <button data-tab="profit">Profit</button>
-  <button data-tab="chat">Chat</button>
+  <button data-tab="track">Tracking Search</button>
 </nav>
 
-<!-- ============ NEW DELIVERY ============ -->
-<section class="tab active" id="tab-new">
+<!-- ============ ORDERS ============ -->
+<section class="tab active" id="tab-orders">
+  <div class="yearbanner"></div>
   <div class="panel">
-    <h2>1. Paste the "Out for delivery" message</h2>
-    <p class="hint">The details fill in the form below automatically. The OTP is ignored, and the pin code picks the saved address.</p>
-    <textarea class="paste" id="pasteBox" placeholder="TODAY OUT FOR DELIVERY&#10;▪ Parcel Name👉🏻 ...&#10;▪ Model Name👉🏻 ...&#10;▪ Tracking👉🏻 ...&#10;▪ Quantity 👉🏻 ...&#10;▪ OTP👉🏻 ...&#10;▪ Phone No 👉🏻 ...&#10;▪ Pin Code 👉🏻 ..."></textarea>
+    <h2>Orders Waiting For Delivery Details</h2>
+    <p class="hint">Rows saved when you ordered, still missing delivery details. Tap one, then paste its out-for-delivery message. If several phones came in one package, tick every row in that package.</p>
+    <div id="incList" class="inc"><div class="empty">Press Connect to see your orders.</div></div>
+  </div>
+  <div class="panel">
+    <h2>Paste The "Out For Delivery" Message</h2>
+    <p class="hint">Leave this empty when you're saving a new order right after placing it.</p>
+    <textarea class="paste" id="pasteBox" placeholder="TODAY OUT FOR DELIVERY&#10;▪️ Parcel Name👉🏻 ...&#10;▪️ Model Name👉🏻 ...&#10;▪️ Tracking👉🏻 ...&#10;▪️ Quantity 👉🏻 ...&#10;▪️ OTP👉🏻 ...&#10;▪️ Phone No 👉🏻 ...&#10;▪️ Pin Code 👉🏻 ..."></textarea>
     <div id="pasteNote"></div>
   </div>
   <div class="panel">
-    <h2>2. Fill in the rest</h2>
-    <p class="hint">Click a box to pick from past entries, or type something new. New values are remembered.</p>
-    <div class="grid" id="orderForm"></div>
+    <div id="modeBar" class="mode" style="display:none"></div>
+    <h2 id="formTitle">New Order</h2>
+    <p class="hint">Click a box to pick from past entries, or type something new.</p>
+    <div id="orderForm"></div>
     <div class="actions">
-      <button class="btn" id="btnAddOrder">Add to sheet</button>
+      <button class="btn" id="btnSaveOrder">Save new order</button>
       <button class="btn ghost" id="btnClearOrder">Clear form</button>
     </div>
     <div id="orderNote"></div>
@@ -135,56 +165,78 @@
 <!-- ============ OUT FOR DELIVERY ============ -->
 <section class="tab" id="tab-ofd">
   <div class="panel">
-    <h2>Out for delivery</h2>
-    <p class="hint">Orders whose status is "Out for Delivery" in your sheet. Press Delivered to set the status and delivery date.</p>
-    <div id="ofdList"><div class="empty">Press Connect at the top to see the list.</div></div>
+    <h2>Out For Delivery</h2>
+    <p class="hint">Press Delivered when the parcel arrives. If a client's card paid for it, the amount is added to that client's payments.</p>
+    <div id="ofdList"><div class="empty">Press Connect to see the list.</div></div>
     <div id="ofdNote"></div>
   </div>
 </section>
 
-<!-- ============ PAYMENTS ============ -->
+<!-- ============ DEALER PAYMENTS ============ -->
 <section class="tab" id="tab-pay">
+  <div class="yearbanner"></div>
   <div class="duebox">
-    <div class="lbl">Payment still due to you</div>
+    <div class="lbl" id="dueLbl">Payment still due to you</div>
     <div class="amt" id="dueAmt">₹ –</div>
-    <div class="sub" id="dueSub">Press Connect at the top to see the amount.</div>
+    <div class="sub" id="dueSub">Press Connect to see the amount.</div>
   </div>
   <div class="panel">
-    <h2>Payment received</h2>
-    <p class="hint">Goes into the payment columns (Payment date, Sender, Bank, Got).</p>
+    <h2>Payment Received From The Dealer</h2>
+    <p class="hint">Goes into the dealer sheet's payment columns (Payment date, Sender, Bank, Got).</p>
     <div class="grid" id="payForm"></div>
-    <div class="actions">
-      <button class="btn" id="btnAddPay">Add to sheet</button>
-      <button class="btn ghost" id="btnClearPay">Clear</button>
-    </div>
+    <div class="actions"><button class="btn" id="btnAddPay">Add to sheet</button><button class="btn ghost" id="btnClearPay">Clear</button></div>
     <div id="payNote"></div>
   </div>
+  <div class="panel">
+    <h2>New Year Sheets</h2>
+    <p class="hint">Creates next year's folder with a fresh sheet for each dealer (same layout, no orders), and carries this year's LEFT over as a negative "Previous Year Due". Payment Details stays one file.</p>
+    <button class="btn ghost" id="btnNewYear">Start next year</button>
+    <div id="yearNote"></div>
+  </div>
+</section>
+
+<!-- ============ CLIENTS ============ -->
+<section class="tab" id="tab-clients">
+  <div id="migrateBox"></div>
+  <div class="duebox owe">
+    <div class="lbl">You Still Have To Give Clients</div>
+    <div class="amt" id="clientsLeft">₹ –</div>
+    <div class="sub" id="clientsSub">Press Connect to see the amount.</div>
+  </div>
+  <div class="panel" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <span class="hint" style="margin:0">Amounts are added here automatically when a client's order is marked Delivered.</span>
+    <button class="btn small ghost" id="btnAddClient">+ Add client</button>
+  </div>
+  <div class="clients" id="clientCards"></div>
+  <div id="clientNote" style="max-width:1000px;margin:10px auto"></div>
 </section>
 
 <!-- ============ PROFIT ============ -->
 <section class="tab" id="tab-profit">
   <div class="panel">
-    <h2>Month-wise profit</h2>
-    <p class="hint">By order date. Profit = Commission + Cashback + Bulk extra. Net profit = Profit − Commission cut (same as your sheet's totals).</p>
-    <div id="profitBox"><div class="empty">Press Connect at the top to see your profits.</div></div>
+    <h2 id="profitTitle">Month-Wise Profit</h2>
+    <p class="hint">Delivered orders only, by order date. Profit = Commission + Cashback + Bulk extra. Net profit = Profit − Commission cut.</p>
+    <div id="profitBox"><div class="empty">Press Connect to see your profits.</div></div>
   </div>
 </section>
 
-<!-- ============ CHAT ============ -->
-<section class="tab" id="tab-chat">
-  <div class="chattop"><button class="btn small ghost" id="btnTpl">Message formats</button></div>
-  <div id="chat"></div>
-  <div class="chatbar">
-    <textarea id="chatInput" rows="1" placeholder="Paste #ORDER / #PAYMENT / #UPDATE messages, then send (Ctrl+Enter)"></textarea>
-    <button class="send" id="chatSend" title="Send">&#10148;</button>
+<!-- ============ TRACKING SEARCH ============ -->
+<section class="tab" id="tab-track">
+  <div class="panel">
+    <h2>Tracking ID Search</h2>
+    <p class="hint">Searches every dealer's sheet. Part of an ID works too. If the same ID is on more than one row, all of them are shown.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="trackQ" placeholder="Type or paste a tracking ID" autocomplete="off" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit">
+      <button class="btn" id="btnTrack">Search</button>
+    </div>
+    <div id="trackOut"></div>
   </div>
 </section>
 
-<datalist id="dl-empty"></datalist>
 <div id="datalists"></div>
 
 <dialog id="dlgDup">
-  <h3>Tracking ID already in the sheet</h3>
+  <h3>Tracking ID Already In The Sheet</h3>
   <div id="dupText"></div>
   <div class="row">
     <button class="btn ghost" data-v="cancel">Cancel</button>
@@ -193,24 +245,36 @@
   </div>
 </dialog>
 
-<dialog id="dlgTpl">
-  <h3>Chat message formats</h3>
-  <div id="tplList"></div>
-  <div class="row"><button class="btn ghost" data-close>Close</button></div>
+<dialog id="dlgPayClient">
+  <h3 id="pcTitle">Pay Client</h3>
+  <div class="grid">
+    <div class="field"><label class="req" for="pcAmount">Amount Given</label><input id="pcAmount" inputmode="decimal" autocomplete="off"></div>
+    <div class="field"><label class="req" for="pcDate">Date</label><input id="pcDate" type="date"></div>
+  </div>
+  <div class="radio">
+    <label><input type="radio" name="pcMethod" value="paid" checked> Paid (cash / UPI / bank)</label>
+    <label><input type="radio" name="pcMethod" value="cut"> Settled via dealer cut</label>
+  </div>
+  <div class="field" id="pcDealerBox" style="display:none"><label for="pcDealer">Deducted From Which Dealer's Payment</label><select id="pcDealer"></select></div>
+  <div id="pcNote"></div>
+  <div class="row"><button class="btn ghost" data-close>Cancel</button><button class="btn" id="pcSave">Save</button></div>
+</dialog>
+
+<dialog id="dlgAddClient">
+  <h3>Add A Client</h3>
+  <p class="hint">Use the exact name you type in "Amount paid by", so their orders link automatically.</p>
+  <div class="field"><label class="req" for="acName">Client Name</label><input id="acName" autocomplete="off"></div>
+  <div id="acNote"></div>
+  <div class="row"><button class="btn ghost" data-close>Cancel</button><button class="btn" id="acSave">Add client</button></div>
 </dialog>
 
 <dialog id="dlgConnect">
-  <h3>Connect your data</h3>
-  <b>Google Sheet (works on phone, PC can be off)</b>
-  <p class="hint">Paste the web app URL and access key from your Apps Script. You only do this once per device, or open your setup link instead.</p>
-  <div class="field"><label for="gUrl">Web app URL</label><input id="gUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
-  <div class="field" style="margin-top:8px"><label for="gKey">Access key</label><input id="gKey" autocomplete="off"></div>
+  <h3>Connect Your Google Sheets</h3>
+  <p class="hint">Paste the beta web app URL and access key, or just open your setup link.</p>
+  <div class="field"><label for="gUrl">Web App URL</label><input id="gUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"></div>
+  <div class="field" style="margin-top:8px"><label for="gKey">Access Key</label><input id="gKey" autocomplete="off"></div>
   <div id="gNote"></div>
-  <div class="row"><button class="btn ghost" id="gDisconnect">Disconnect</button><button class="btn" id="gSave">Connect Google Sheet</button></div>
-  <hr style="border:0;border-top:1px solid #e3e9e7;margin:16px 0 10px">
-  <b>Or an Excel file on this computer</b>
-  <p class="hint">Chrome or Edge on a computer only.</p>
-  <div class="row" style="justify-content:space-between"><button class="btn ghost" data-close>Close</button><button class="btn ghost" id="btnFile">Open Excel file</button></div>
+  <div class="row"><button class="btn ghost" id="gDisconnect">Disconnect</button><button class="btn ghost" data-close>Close</button><button class="btn" id="gSave">Connect</button></div>
 </dialog>
 
 <dialog id="dlgSettings">
@@ -223,449 +287,140 @@
   <div class="row"><button class="btn ghost" data-close>Cancel</button><button class="btn" id="saveSettings">Save</button></div>
 </dialog>
 
-<input type="file" id="fileInput" accept=".xlsx" hidden>
-
 <script>
 "use strict";
-/* ======================= CONFIG (matches your sheet) ======================= */
+/* ======================= CONFIG ======================= */
+const DEALERS = {
+  rahul:  { name: "Rahul Yadav",   commissionInput: false },   // you type Return; Commission = Return − Amount
+  sourav: { name: "Sourav Mondal", commissionInput: true  }    // you type Commission; Return = Amount + Commission
+};
+const OWNERS = ["aritra"];            // "Amount paid by" names that are you (no client payment)
 const FIRST_DATA_ROW = 3;
 const ORDER_COLS = {
   date:"A", by:"B", platform:"C", name:"D", mobile:"E", model:"F", qty:"G", address:"H",
   tracking:"I", status:"J", delivery_date:"K", card:"L", paid_by:"M", amount:"N",
-  cashback:"P", bulk_extra:"Q", return:"R", commission_cut:"S"
+  cashback:"P", bulk_extra:"Q", commission_cut:"S"
 };
-const COMMISSION_COL = "O";
-const KEY_COLS = ["A", "B", "C", "D", "F", "I", "N"];   // date, placed by, platform, name, model, tracking, amount
+const COMMISSION_COL = "O", RETURN_COL = "R", HAVE_COL = "T";
+const KEY_COLS = ["A", "B", "C", "D", "F", "I", "N"];
 const PAYMENT_COLS = { date:"V", sender:"W", bank:"X", amount:"Y" };
-const OFD = "Out for Delivery";
-const DELIVERED = "Delivered";
+const OFD = "Out for Delivery", DELIVERED = "Delivered", ORDERED = "Ordered";
+const DONE_STATUSES = ["delivered", "out for delivery", "returned", "cancelled"];
 
-const ORDER_FIELDS = [   // [key, label, type, required]
-  ["date", "Order date", "date", true], ["by", "Order placed by", "text", true], ["platform", "Platform", "text", true],
-  ["name", "Parcel name", "text", true], ["mobile", "Mobile no", "text"], ["model", "Model", "text", true],
-  ["qty", "Quantity", "number"], ["pin", "Pin code", "text"], ["address", "Address", "text", false, true],
-  ["tracking", "Tracking ID", "text"], ["status", "Delivery status", "text"], ["delivery_date", "Delivery date", "date"],
-  ["card", "Card details", "text"], ["paid_by", "Amount paid by", "text"],
-  ["amount", "Amount", "number", true], ["return", "Return amount", "number", true], ["commission", "Commission", "number"],
-  ["commission_cut", "Commission cut", "number"], ["have_to_return", "I have to return", "number"],
-  ["cashback", "Cashback", "number"], ["bulk_extra", "Bulk extra", "number"]
+const ORDER_FIELDS = [   // [key, label, type, required, wide]   manual details first
+  ["date", "Order Date", "date", true], ["by", "Order Placed By", "text", true], ["platform", "Platform", "text", true],
+  ["model", "Model", "text"], ["qty", "Quantity", "number"],
+  ["card", "Card Details", "text"], ["paid_by", "Amount Paid By", "text", true],
+  ["amount", "Amount", "number", true], ["return", "Return Amount", "number", true], ["commission", "Commission", "number"],
+  ["commission_cut", "Commission Cut", "number"], ["have_to_return", "I Have To Return", "number"],
+  ["cashback", "Cashback", "number"], ["bulk_extra", "Bulk Extra", "number"], ["status", "Delivery Status", "text"],
+  // filled from the out-for-delivery message
+  ["name", "Parcel Name", "text"], ["mobile", "Mobile No", "text"], ["tracking", "Tracking ID", "text"],
+  ["delivery_date", "Delivery Date", "date"], ["pin", "Pin Code", "text"], ["address", "Address", "text", false, true]
 ];
-const PAY_FIELDS = [["date", "Payment date", "date", true], ["sender", "Sender", "text", true], ["bank", "Bank", "text", true], ["amount", "Amount got", "number", true]];
+const MSG_FIELDS = new Set(["name", "mobile", "pin", "tracking", "delivery_date", "address"]);
+const PAY_FIELDS = [["date", "Payment Date", "date", true], ["sender", "Sender", "text", true], ["bank", "Bank", "text", true], ["amount", "Amount Got", "number", true]];
 const NO_LIST = new Set(["date", "delivery_date", "qty", "pin", "tracking", "mobile", "commission", "have_to_return"]);
-const COMPUTED = new Set(["commission", "have_to_return"]);   // shown in the form, calculated by the sheet
-const HAVE_COL = "T";                                         // Total Have to Return = Amount + Commission cut
-const DEFAULT_LISTS = { status: [OFD, DELIVERED, "Ordered", "Returned", "Cancelled"], platform: ["Flipkart", "Amazon"] };
-
-const LABELS = Object.fromEntries([...ORDER_FIELDS, ["sender","Sender"], ["bank","Bank"]].map(f => [f[0], f[1]]));
-LABELS.amount = "Amount";
+const DEFAULT_LISTS = { status: [ORDERED, OFD, DELIVERED, "Returned", "Cancelled"], platform: ["Flipkart", "Amazon", "Rupay Transaction"] };
+const LABELS = Object.fromEntries(ORDER_FIELDS.map(f => [f[0], f[1]]));
 const ALIASES = {
-  date:"date", orderdate:"date", paymentdate:"date", by:"by", placedby:"by", orderplacedby:"by",
-  platform:"platform", site:"platform", name:"name", parcelname:"name", nameofparcel:"name", nameofpercel:"name",
+  date:"date", orderdate:"date", by:"by", placedby:"by", platform:"platform", name:"name", parcelname:"name", nameofparcel:"name", nameofpercel:"name",
   mobile:"mobile", mobileno:"mobile", phone:"mobile", phoneno:"mobile", mob:"mobile",
   model:"model", modelname:"model", product:"model", item:"model", qty:"qty", quantity:"qty",
-  address:"address", addr:"address", tracking:"tracking", trackingid:"tracking", trackingno:"tracking", tid:"tracking", orderid:"tracking",
-  status:"status", deliverystatus:"status", deliverydate:"delivery_date", delivered:"delivery_date", deliveredon:"delivery_date",
-  card:"card", carddetails:"card", paidby:"paid_by", amountpaidby:"paid_by", ammountpaidby:"paid_by",
-  amount:"amount", ammount:"amount", price:"amount", cashback:"cashback", bulkextra:"bulk_extra",
-  return:"return", returnamount:"return", returnammount:"return",
-  commissioncut:"commission_cut", comissioncut:"commission_cut", cut:"commission_cut",
-  sender:"sender", from:"sender", bank:"bank", receivedin:"bank", account:"bank",
-  pincode:"pin", pin:"pin", otp:"otp"
+  address:"address", tracking:"tracking", trackingid:"tracking", trackingno:"tracking", pincode:"pin", pin:"pin", otp:"otp"
 };
-const NUMBER_FIELDS = new Set(["qty","amount","cashback","bulk_extra","return","commission_cut","mobile"]);
-const DATE_FIELDS = new Set(["date","delivery_date"]);
+const NUMBER_FIELDS = new Set(["qty","amount","cashback","bulk_extra","return","commission","commission_cut","mobile"]);
 const DEFAULT_PLATFORMS = "FK = Flipkart\nAMZ = Amazon";
+const LS = "olb_";   // localStorage prefix (kept apart from the main app)
 
-/* ======================= small helpers ======================= */
+/* ======================= helpers ======================= */
 const $ = id => document.getElementById(id);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
-const fmtDate = d => d instanceof Date ? d.toLocaleDateString("en-GB") : d;
-const MONTHS = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-function today() { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const today = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
 const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const fromIso = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const isoToSerial = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
 const serialToDate = v => { const n = Number(v); if (!isFinite(n) || n < 20000) return null; const u = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 86400000); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); };
-function parseDate(text) {
-  const t = text.trim().toLowerCase();
-  if (t === "today") return today();
-  if (t === "yesterday") { const d = today(); d.setDate(d.getDate() - 1); return d; }
-  let m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?$/);
-  if (m) return mk(+m[1], +m[2] - 1, m[3]);
-  m = t.match(/^(\d{1,2})[\s\/\-]*([a-z]{3})[a-z]*[\s\/\-,]*(\d{2,4})?$/);
-  if (m && m[2] in MONTHS) return mk(+m[1], MONTHS[m[2]], m[3]);
-  throw new Error(`can't read date "${text}" (use DD/MM/YY)`);
-  function mk(d, mo, y) {
-    let yr = y ? +y : new Date().getFullYear(); if (yr < 100) yr += 2000;
-    const dt = new Date(yr, mo, d);
-    if (dt.getMonth() !== mo || dt.getDate() !== d) throw new Error(`"${text}" is not a real date`);
-    return dt;
-  }
-}
+const fmtDate = d => d instanceof Date ? d.toLocaleDateString("en-GB") : (d ?? "");
+const inr = n => (n < 0 ? "−₹" : "₹") + Math.abs(Math.round(n)).toLocaleString("en-IN");
+const num = v => { if (v === null || v === undefined || v === "") return null; const n = Number(String(v).replace(/[₹,\s]/g, "")); return isFinite(n) ? n : null; };
+const round2 = n => Math.round(n * 100) / 100;
+const normKey = k => k.toLowerCase().replace(/[^a-z]/g, "");
+const normName = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const normModel = s => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const colNum = L => [...L].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
+const colLetter = n => { let s = ""; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
 function parseNumber(text) {
   const t = String(text).replace(/rs\.?|inr|₹|,|\s|\/-/gi, "");
   if (!/^-?\d+(\.\d+)?$/.test(t)) throw new Error(`"${text}" is not a number`);
   return Number(t);
 }
-const normKey = k => k.toLowerCase().replace(/[^a-z]/g, "");
 function guessPlatform(tracking) {
   const t = String(tracking || "").trim().toUpperCase();
   if (/^(FMP|SF\d|OD\d)/.test(t)) return "Flipkart";
   if (/^\d{12}$/.test(t) || /^\d{3}-\d{7}-\d{7}$/.test(t)) return "Amazon";
   return "";
 }
+function note(id, kind, html) { $(id).innerHTML = html ? `<div class="note ${kind}">${html}</div>` : ""; }
+const lsGet = (k, d) => { try { const v = localStorage.getItem(LS + k); return v === null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(LS + k, v); } catch (e) {} };
 
 /* ======================= shortcuts + remembered entries ======================= */
 function loadMap(key, fallback) {
-  let txt = fallback;
-  try { const v = localStorage.getItem(key); if (v !== null) txt = v; } catch (e) {}
-  const map = {};
+  const txt = lsGet(key, fallback), map = {};
   for (const line of txt.split("\n")) { const i = line.indexOf("="); if (i > 0) map[line.slice(0, i).trim().toUpperCase()] = line.slice(i + 1).trim(); }
   return { txt, map };
 }
-let addrMap = loadMap("ol_addr", "").map, platMap = loadMap("ol_plat", DEFAULT_PLATFORMS).map;
-let hist = {};
-try { hist = JSON.parse(localStorage.getItem("ol_hist") || "{}"); } catch (e) {}
+let addrMap = loadMap("addr", "").map, platMap = loadMap("plat", DEFAULT_PLATFORMS).map;
+let hist = {}; try { hist = JSON.parse(lsGet("hist", "{}")); } catch (e) {}
 function remember(prefix, data) {
   for (const [k, v] of Object.entries(data)) {
     if ((NO_LIST.has(k) && k !== "mobile") || v === null || v === undefined || v === "" || v instanceof Date) continue;
     const key = prefix + k, list = (hist[key] || []).filter(x => x !== String(v));
     list.unshift(String(v)); hist[key] = list.slice(0, 300);
   }
-  try { localStorage.setItem("ol_hist", JSON.stringify(hist)); } catch (e) {}
+  lsSet("hist", JSON.stringify(hist));
 }
 
-/* learned from the sheet each time it is read */
-let learned = { lists: {}, pinAddr: {}, paidByFor: {}, paidByForCard: {}, tracking: {}, ofd: [], mobiles: [] };
+/* ======================= Google Sheets connection ======================= */
+let remote = null; try { remote = JSON.parse(lsGet("remote", "null")); } catch (e) {}
+let dealer = lsGet("dealer", "rahul"); if (!DEALERS[dealer]) dealer = "rahul";
+let DATA = null;        // last read: { rahul, sourav, clients, history } -> { values, name }
+let year = lsGet("year", "");   // "" = latest year folder
+let YEARS = [], MISSING = [];
+let connected = false;
 
-/* ======================= minimal .xlsx (zip + xml) editor ======================= */
-const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
-const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
-async function pipe(bytes, ts) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(ts)).arrayBuffer()); }
-
-function readZip(buf) {
-  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  let e = buf.length - 22;
-  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
-  if (e < 0) throw new Error("This doesn't look like an .xlsx file.");
-  const count = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
-  const entries = [];
-  for (let i = 0; i < count; i++) {
-    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("The Excel file seems damaged.");
-    const nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true);
-    const lo = dv.getUint32(p + 42, true), csize = dv.getUint32(p + 20, true);
-    const start = lo + 30 + dv.getUint16(lo + 26, true) + dv.getUint16(lo + 28, true);
-    entries.push({
-      name: new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nl)),
-      flags: dv.getUint16(p + 8, true), method: dv.getUint16(p + 10, true),
-      time: dv.getUint16(p + 12, true), date: dv.getUint16(p + 14, true),
-      crc: dv.getUint32(p + 16, true), csize, usize: dv.getUint32(p + 24, true),
-      data: buf.subarray(start, start + csize)
-    });
-    p += 46 + nl + el + cl;
-  }
-  return entries;
-}
-async function zipText(entry) {
-  const raw = entry.method === 0 ? entry.data : await pipe(entry.data, new DecompressionStream("deflate-raw"));
-  return new TextDecoder().decode(raw);
-}
-async function zipSetText(entry, text) {
-  const raw = new TextEncoder().encode(text);
-  entry.data = await pipe(raw, new CompressionStream("deflate-raw"));
-  Object.assign(entry, { method: 8, crc: crc32(raw), csize: entry.data.length, usize: raw.length });
-}
-function writeZip(entries) {
-  const enc = new TextEncoder(); const parts = []; const central = []; let off = 0;
-  for (const en of entries) {
-    const name = enc.encode(en.name), flags = en.flags & ~8;
-    const h = new DataView(new ArrayBuffer(30));
-    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, flags, true); h.setUint16(8, en.method, true);
-    h.setUint16(10, en.time, true); h.setUint16(12, en.date, true); h.setUint32(14, en.crc, true);
-    h.setUint32(18, en.csize, true); h.setUint32(22, en.usize, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
-    parts.push(new Uint8Array(h.buffer), name, en.data);
-    const c = new DataView(new ArrayBuffer(46));
-    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, flags, true);
-    c.setUint16(10, en.method, true); c.setUint16(12, en.time, true); c.setUint16(14, en.date, true); c.setUint32(16, en.crc, true);
-    c.setUint32(20, en.csize, true); c.setUint32(24, en.usize, true); c.setUint16(28, name.length, true); c.setUint32(42, off, true);
-    central.push(new Uint8Array(c.buffer), name);
-    off += 30 + name.length + en.data.length;
-  }
-  const cdSize = central.reduce((s, a) => s + a.length, 0);
-  const eocd = new DataView(new ArrayBuffer(22));
-  eocd.setUint32(0, 0x06054b50, true); eocd.setUint16(8, entries.length, true); eocd.setUint16(10, entries.length, true);
-  eocd.setUint32(12, cdSize, true); eocd.setUint32(16, off, true);
-  const all = [...parts, ...central, new Uint8Array(eocd.buffer)];
-  const out = new Uint8Array(all.reduce((s, a) => s + a.length, 0)); let q = 0;
-  for (const a of all) { out.set(a, q); q += a.length; }
-  return out;
-}
-
-const colNum = L => [...L].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0);
-const colOf = ref => ref.replace(/\d+/g, "");
-const xmlDoc = s => { const d = new DOMParser().parseFromString(s, "application/xml"); if (d.getElementsByTagName("parsererror").length) throw new Error("Couldn't read the sheet XML."); return d; };
-const xmlOut = d => { let s = new XMLSerializer().serializeToString(d); if (!s.startsWith("<?xml")) s = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s; return s; };
-
-class Sheet {
-  constructor(doc, sst) {
-    this.doc = doc; this.sst = sst;
-    this.sd = doc.getElementsByTagNameNS(NS, "sheetData")[0];
-    this.rows = new Map();
-    for (const r of this.sd.children) if (r.localName === "row") this.rows.set(+r.getAttribute("r"), r);
-  }
-  el(n) { return this.doc.createElementNS(NS, n); }
-  getRow(n, create, templateRow) {
-    let row = this.rows.get(n);
-    if (row || !create) return row || null;
-    row = this.el("row");
-    const tpl = templateRow && this.rows.get(templateRow);
-    if (tpl) for (const a of tpl.attributes) if (a.name !== "r") row.setAttribute(a.name, a.value);
-    row.setAttribute("r", n);
-    const next = [...this.rows.keys()].filter(k => k > n).sort((a, b) => a - b)[0];
-    this.sd.insertBefore(row, next ? this.rows.get(next) : null);
-    this.rows.set(n, row);
-    return row;
-  }
-  cell(n, col, create, templateRow) {
-    const row = this.getRow(n, create, templateRow); if (!row) return null;
-    const want = colNum(col);
-    for (const c of row.children) {
-      if (c.localName !== "c") continue;
-      const have = colNum(colOf(c.getAttribute("r")));
-      if (have === want) return c;
-      if (have > want) { if (!create) return null; const nc = this.el("c"); nc.setAttribute("r", col + n); row.insertBefore(nc, c); return nc; }
-    }
-    if (!create) return null;
-    const nc = this.el("c"); nc.setAttribute("r", col + n); row.appendChild(nc); return nc;
-  }
-  value(n, col) {
-    const c = this.cell(n, col, false); if (!c) return null;
-    const t = c.getAttribute("t"), get = tag => { const e = c.getElementsByTagNameNS(NS, tag)[0]; return e ? e.textContent : null; };
-    const v = get("v");
-    if (t === "s") return v === null ? null : this.sst[+v];
-    if (t === "inlineStr") return [...c.getElementsByTagNameNS(NS, "t")].map(e => e.textContent).join("");
-    if (v !== null) return v;
-    const f = get("f"); return f !== null ? "=" + f : null;
-  }
-  lastRow(cols) {
-    const nums = [...this.rows.keys()].sort((a, b) => b - a);
-    for (const n of nums) {
-      if (n < FIRST_DATA_ROW) break;
-      if (cols.some(c => { const v = this.value(n, c); return v !== null && String(v).trim() !== ""; })) return n;
-    }
-    return FIRST_DATA_ROW - 1;
-  }
-  set(n, col, val, styleRow) {
-    const c = this.cell(n, col, true, styleRow);
-    if (styleRow >= FIRST_DATA_ROW) {
-      const sc = this.cell(styleRow, col, false);
-      if (sc && sc.getAttribute("s")) c.setAttribute("s", sc.getAttribute("s"));
-    }
-    while (c.firstChild) c.removeChild(c.firstChild);
-    c.removeAttribute("t");
-    if (val === null || val === undefined || val === "") return;
-    if (val instanceof Date) val = (Date.UTC(val.getFullYear(), val.getMonth(), val.getDate()) - Date.UTC(1899, 11, 30)) / 86400000;
-    if (typeof val === "number") { const v = this.el("v"); v.textContent = String(val); c.appendChild(v); }
-    else if (val.startsWith("=")) { const f = this.el("f"); f.textContent = val.slice(1); c.appendChild(f); }
-    else {
-      c.setAttribute("t", "inlineStr");
-      const is = this.el("is"), t = this.el("t");
-      t.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve");
-      t.textContent = val; is.appendChild(t); c.appendChild(is);
-    }
-  }
-  findTracking(id) {
-    const want = String(id).trim().toUpperCase(), hits = [];
-    for (const n of this.rows.keys()) {
-      if (n < FIRST_DATA_ROW) continue;
-      const v = this.value(n, ORDER_COLS.tracking);
-      if (v !== null && String(v).trim().toUpperCase() === want) hits.push(n);
-    }
-    return hits;
-  }
-  setKeep(n, col, val) {                 // change a value, keep the cell's own format
-    const c = this.cell(n, col, true), keep = c.getAttribute("s");
-    this.set(n, col, val, n > FIRST_DATA_ROW ? n - 1 : 0);
-    if (keep) c.setAttribute("s", keep);
-  }
-  fixDimension() {
-    const dim = this.doc.getElementsByTagNameNS(NS, "dimension")[0]; if (!dim) return;
-    const max = Math.max(...this.rows.keys());
-    const m = (dim.getAttribute("ref") || "").match(/^([A-Z]+\d+):([A-Z]+)(\d+)$/);
-    if (m && max > +m[3]) dim.setAttribute("ref", `${m[1]}:${m[2]}${max}`);
-  }
-}
-
-
-
-async function openWorkbook(bytes) {
-  const entries = readZip(bytes);
-  const get = name => entries.find(e => e.name === name);
-  const wbEntry = get("xl/workbook.xml"), relsEntry = get("xl/_rels/workbook.xml.rels");
-  if (!wbEntry || !relsEntry) throw new Error("This doesn't look like an Excel workbook.");
-  const wb = xmlDoc(await zipText(wbEntry)), rels = xmlDoc(await zipText(relsEntry));
-  const first = wb.getElementsByTagNameNS(NS, "sheet")[0];
-  const rid = first.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
-  const rel = [...rels.getElementsByTagName("Relationship")].find(r => r.getAttribute("Id") === rid);
-  let target = rel.getAttribute("Target"); target = target.startsWith("/") ? target.slice(1) : "xl/" + target;
-  const sheetEntry = get(target), sstEntry = get("xl/sharedStrings.xml"); let sst = [];
-  if (sstEntry) {
-    const d = xmlDoc(await zipText(sstEntry));
-    sst = [...d.getElementsByTagNameNS(NS, "si")].map(si => [...si.getElementsByTagNameNS(NS, "t")].map(t => t.textContent).join(""));
-  }
-  return { entries, wb, wbEntry, sheetEntry, sheet: new Sheet(xmlDoc(await zipText(sheetEntry)), sst) };
-}
-async function saveWorkbook(book) {
-  book.sheet.fixDimension();
-  await zipSetText(book.sheetEntry, xmlOut(book.sheet.doc));
-  let calc = book.wb.getElementsByTagNameNS(NS, "calcPr")[0];
-  if (!calc) { calc = book.wb.createElementNS(NS, "calcPr"); book.wb.documentElement.appendChild(calc); }
-  calc.setAttribute("fullCalcOnLoad", "1");
-  await zipSetText(book.wbEntry, xmlOut(book.wb));
-  return writeZip(book.entries);
-}
-
-/* read everything useful out of the sheet: dropdown lists, pin -> address, out-for-delivery list */
-function learn(sh) {
-  const L = { lists: {}, pinAddr: {}, paidByFor: {}, paidByForCard: {}, tracking: {}, ofd: [], mobiles: [] };
-  const nums = [...sh.rows.keys()].filter(n => n >= FIRST_DATA_ROW).sort((a, b) => a - b);
-  const add = (key, v) => { if (v === null || String(v).trim() === "") return; (L.lists[key] = L.lists[key] || []).push(String(v).trim()); };
-  for (const n of nums) {
-    const r = {}; for (const [f, c] of Object.entries(ORDER_COLS)) r[f] = sh.value(n, c);
-    for (const f of Object.keys(ORDER_COLS)) if (!NO_LIST.has(f)) add("o." + f, r[f]);
-    add("p.sender", sh.value(n, PAYMENT_COLS.sender)); add("p.bank", sh.value(n, PAYMENT_COLS.bank)); add("p.amount", sh.value(n, PAYMENT_COLS.amount));
-    if (r.address) { const pins = String(r.address).match(/\b\d{6}\b/g); if (pins) L.pinAddr[pins[pins.length - 1]] = String(r.address).trim(); }
-    if (r.mobile && /^\d{10}$/.test(String(r.mobile).trim())) L.mobiles.unshift({ num: String(r.mobile).trim(), name: String(r.name || "").trim() });
-    if (r.by && r.paid_by) L.paidByFor[String(r.by).trim()] = String(r.paid_by).trim();
-    if (r.card && r.paid_by) L.paidByForCard[String(r.card).trim()] = String(r.paid_by).trim();
-    if (r.tracking) {
-      const t = String(r.tracking).trim().toUpperCase();
-      (L.tracking[t] = L.tracking[t] || []).push({ row: n, date: serialToDate(r.date), status: r.status, name: r.name });
-    }
-    if (r.status && String(r.status).trim().toLowerCase() === OFD.toLowerCase())
-      L.ofd.push({ row: n, date: serialToDate(r.date), name: r.name, model: r.model, tracking: r.tracking, qty: r.qty, address: r.address });
-  }
-  for (const k of Object.keys(L.lists)) L.lists[k] = [...new Set(L.lists[k].reverse())];   // most recent first, unique
-  // money: same as the sheet's TOTAL / TOTAL GOT / LEFT and Total Profit / Net PROFIT
-  const num = v => { const n = Number(v); return v !== null && v !== "" && isFinite(n) ? n : null; };
-  const commission = n => {                       // column O: cached value, or Return - Amount
-    const v = sh.value(n, COMMISSION_COL); if (v === null) return 0;
-    const x = num(v); if (x !== null) return x;
-    return (num(sh.value(n, ORDER_COLS.return)) || 0) - (num(sh.value(n, ORDER_COLS.amount)) || 0);
-  };
-  let toGet = 0, got = 0; const months = {};
-  for (const n of [...sh.rows.keys()].filter(n => n >= 2)) {
-    const amt = num(sh.value(n, ORDER_COLS.amount)) || 0, com = n >= FIRST_DATA_ROW ? commission(n) : 0;
-    toGet += amt + com;
-    got += num(sh.value(n, PAYMENT_COLS.amount)) || 0;
-    if (n < FIRST_DATA_ROW) continue;
-    const d = serialToDate(sh.value(n, ORDER_COLS.date));
-    const cb = num(sh.value(n, ORDER_COLS.cashback)) || 0, bx = num(sh.value(n, ORDER_COLS.bulk_extra)) || 0, cut = num(sh.value(n, ORDER_COLS.commission_cut)) || 0;
-    if (!d || (!amt && !com && !cb && !bx && !cut)) continue;
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const m = months[key] = months[key] || { orders: 0, com: 0, cb: 0, bx: 0, cut: 0 };
-    m.orders++; m.com += com; m.cb += cb; m.bx += bx; m.cut += cut;
-  }
-  L.money = { toGet, got, due: toGet - got };
-  L.months = months;
-  learned = L;
-  renderMoney();
-  refreshDatalists(); renderOfd();
-}
-
-/* operations on the sheet */
-function writeOrder(sh, d, replaceRow) {
-  const row = replaceRow || sh.lastRow(KEY_COLS) + 1;
-  const styleRow = replaceRow || row - 1;
-  for (const [f, col] of Object.entries(ORDER_COLS)) sh.set(row, col, f in d ? d[f] : null, styleRow);
-  sh.set(row, COMMISSION_COL, `=SUM(R${row}-N${row})`, styleRow);
-  sh.set(row, HAVE_COL, "commission_cut" in d ? `=SUM(N${row}+S${row})` : null, styleRow);
-  return row;
-}
-function writePayment(sh, d) {
-  const last = sh.lastRow(Object.values(PAYMENT_COLS)), row = last + 1;
-  for (const [f, col] of Object.entries(PAYMENT_COLS)) sh.set(row, col, f in d ? d[f] : null, last);
-  return row;
-}
-function updateRow(sh, row, d) {
-  const changes = [];
-  for (const [f, v] of Object.entries(d)) {
-    if (f === "tracking" || !(f in ORDER_COLS)) continue;
-    sh.setKeep(row, ORDER_COLS[f], v);
-    changes.push(`${LABELS[f] || f} = ${fmtDate(v)}`);
-  }
-  return changes;
-}
-
-/* ======================= file handling ======================= */
-const canSaveInPlace = "showOpenFilePicker" in window;
-let handle = null, memBytes = null, memName = "", connected = false;
-const idb = (() => {
-  const open = () => new Promise((res, rej) => { const r = indexedDB.open("order-logger", 1); r.onupgradeneeded = () => r.result.createObjectStore("kv"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-  return {
-    async get(k) { const db = await open(); return new Promise(res => { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); },
-    async set(k, v) { const db = await open(); return new Promise(res => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = res; t.onerror = res; }); }
-  };
-})();
-const setStatus = t => $("fileStatus").textContent = t;
-async function hasPermission(ask) {
-  if (!handle) return false;
-  const o = { mode: "readwrite" };
-  if (await handle.queryPermission(o) === "granted") return true;
-  return ask ? (await handle.requestPermission(o)) === "granted" : false;
-}
-async function currentBytes() {
-  if (handle) {
-    if (!(await hasPermission(true))) throw new Error("Permission to edit the file was not given. Press the button at the top again.");
-    return new Uint8Array(await (await handle.getFile()).arrayBuffer());
-  }
-  if (memBytes) return memBytes;
-  throw new Error("Press Connect at the top first.");
-}
-async function writeBytes(out) {
-  if (handle) {
-    try { const w = await handle.createWritable(); await w.write(out); await w.close(); }
-    catch (e) { throw new Error("Couldn't save. If the file is open in Excel, close it and try again."); }
-    return handle.name;
-  }
-  memBytes = out;
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
-  a.download = memName; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  return memName + " (downloaded)";
-}
-/* read latest file -> run fn on the sheet -> save if fn says so -> relearn */
-/* ---------- Google Sheets (via your Apps Script web app) ---------- */
-let remote = null;   // { url, key }
-try { remote = JSON.parse(localStorage.getItem("ol_remote") || "null"); } catch (e) {}
-const isoToSerial = iso => { const [y, m, d] = iso.split("-").map(Number); return (Date.UTC(y, m - 1, d) - Date.UTC(1899, 11, 30)) / 86400000; };
 async function api(req, cfg = remote) {
   let r;
-  try {
-    r = await fetch(cfg.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ ...req, key: cfg.key }) });
-  } catch (e) { throw new Error("Couldn't reach your Google Sheet. Check the internet connection and try again."); }
-  let j; try { j = await r.json(); } catch (e) { throw new Error("The Google Sheet link didn't answer properly. Check the web app URL in Connect."); }
-  if (!j.ok) throw new Error(j.error || "Google Sheet error");
+  try { r = await fetch(cfg.url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ year, ...req, key: cfg.key }) }); }
+  catch (e) { throw new Error("Couldn't reach your Google Sheets. Check the internet connection and try again."); }
+  let j; try { j = await r.json(); } catch (e) { throw new Error("The web app link didn't answer properly. Check it under Connect."); }
+  if (!j.ok) throw new Error(j.error || "Google Sheets error");
+  if (j.years) { YEARS = j.years; MISSING = j.missing || []; if (j.year && year && j.year !== year) { year = j.year; lsSet("year", year); } renderYear(); }
   return j;
 }
+
 class RemoteSheet {
-  constructor(values) {
-    this.grid = values.map(r => r.slice()); this.rows = new Map(); this.changes = []; this.orig = new Map();
-    values.forEach((r, i) => { if (r.some(v => v !== "" && v !== null)) this.rows.set(i + 1, true); });
+  constructor(key, values) {
+    this.key = key; this.grid = (values || []).map(r => r.slice()); this.rows = new Map(); this.changes = []; this.orig = new Map();
+    this.grid.forEach((r, i) => { if (r.some(v => v !== "" && v !== null)) this.rows.set(i + 1, true); });
   }
-  raw(n, c) { const r = this.grid[n - 1]; return r ? r[c - 1] : ""; }
+  raw(n, c) { const r = this.grid[n - 1]; return r ? (r[c - 1] ?? "") : ""; }
   value(n, col) {
-    const v = this.raw(n, colNum(col));
+    const v = this.raw(n, typeof col === "number" ? col : colNum(col));
     if (v === "" || v === null || v === undefined) return null;
     if (typeof v === "object" && v.d) return String(isoToSerial(v.d));
     return String(v);
   }
-  lastRow(cols) {
+  date(n, col) { const v = this.raw(n, typeof col === "number" ? col : colNum(col)); return v && typeof v === "object" && v.d ? fromIso(v.d) : serialToDate(v); }
+  maxRow() { return Math.max(0, ...this.rows.keys()); }
+  maxCol() { return Math.max(0, ...this.grid.map(r => r.length)); }
+  lastRow(cols, first = FIRST_DATA_ROW) {
     for (const n of [...this.rows.keys()].sort((a, b) => b - a)) {
-      if (n < FIRST_DATA_ROW) break;
+      if (n < first) break;
       if (cols.some(c => { const v = this.value(n, c); return v !== null && v.trim() !== ""; })) return n;
     }
-    return FIRST_DATA_ROW - 1;
+    return first - 1;
   }
   findTracking(id) {
     const want = String(id).trim().toUpperCase(), hits = [];
@@ -676,79 +431,153 @@ class RemoteSheet {
     }
     return hits;
   }
-  set(n, col, val, styleRow) {
-    const c = colNum(col), key = n + ":" + c;
+  set(n, col, val, styleRow = 0) {
+    const c = typeof col === "number" ? col : colNum(col), key = n + ":" + c;
     if (!this.orig.has(key)) this.orig.set(key, this.raw(n, c) ?? "");
-    const ch = { row: n, col: c, styleRow: styleRow >= FIRST_DATA_ROW && styleRow !== n ? styleRow : 0 };
-    let cellVal = "";
+    const ch = { sheet: this.key, row: n, col: c, styleRow: styleRow >= 1 && styleRow !== n ? styleRow : 0 };
+    let cellVal;
     if (val instanceof Date) { ch.date = isoDate(val); cellVal = { d: ch.date }; }
     else if (typeof val === "number") { ch.v = val; cellVal = val; }
     else if (typeof val === "string" && val.startsWith("=")) { ch.f = val; cellVal = ""; }
     else { ch.v = val === null || val === undefined ? "" : String(val); cellVal = ch.v; }
     ch.was = this.orig.get(key);
-    this.changes = this.changes.filter(x => !(x.row === n && x.col === c));
+    this.changes = this.changes.filter(x => x.op || !(x.row === n && x.col === c));
     this.changes.push(ch);
     while (this.grid.length < n) this.grid.push([]);
     this.grid[n - 1][c - 1] = cellVal;
     this.rows.set(n, true);
   }
-  setKeep(n, col, val) { this.set(n, col, val, 0); }
-  fixDimension() {}
+  op(o) { this.changes.push({ sheet: this.key, ...o }); }
+}
+const sheetsFrom = data => Object.fromEntries(Object.entries(data).map(([k, v]) => [k, new RemoteSheet(k, v.values)]));
+
+/* read everything -> fn(sheets) edits -> write -> relearn */
+async function withData(fn) {
+  if (!remote) throw new Error("Press Connect at the top first.");
+  const S = sheetsFrom((await api({ action: "read" })).data);
+  const res = (await fn(S)) || {};
+  const changes = Object.values(S).flatMap(s => s.changes);
+  if (res.save !== false && changes.length) {
+    const out = await api({ action: "write", changes });
+    DATA = out.data; res.saved = true;
+  } else if (!res.cancelled) DATA = Object.fromEntries(Object.entries(S).map(([k, s]) => [k, { values: s.grid, name: (DATA && DATA[k] && DATA[k].name) || "" }]));
+  learn();
+  return res;
 }
 
-async function withSheet(fn) {
-  if (remote) {
-    const sh = new RemoteSheet((await api({ action: "read" })).values);
-    const res = await fn(sh);
-    if (res && res.save && sh.changes.length) {
-      const out = await api({ action: "write", changes: sh.changes });
-      res.where = "your Google Sheet";
-      learn(new RemoteSheet(out.values));
-    } else learn(sh);
-    return res || {};
-  }
-  const book = await openWorkbook(await currentBytes());
-  const res = await fn(book.sheet);
-  if (res && res.save) res.where = await writeBytes(await saveWorkbook(book));
-  learn(book.sheet);
-  return res || {};
+/* ======================= learn: everything the screens need ======================= */
+let L = { dealers: {}, lists: {}, pinAddr: {}, paidByFor: {}, paidByForCard: {}, mobiles: [], clients: [], clientsLegacy: false };
+
+function readOrderRow(sh, n) {
+  const r = { row: n };
+  for (const [f, c] of Object.entries(ORDER_COLS)) r[f] = sh.value(n, c);
+  r.dateObj = sh.date(n, ORDER_COLS.date); r.deliveryObj = sh.date(n, ORDER_COLS.delivery_date);
+  r.commission = sh.value(n, COMMISSION_COL); r.return = sh.value(n, RETURN_COL);
+  return r;
 }
-async function connected_(name, how) {
-  connected = true;
-  setStatus(`Connected: ${name}${how}`);
-  if (!remote) $("btnFile").textContent = "Change Excel file";
-  await withSheet(() => null);
-}
-let reconnectPending = false;
-$("btnFile").addEventListener("click", async () => {
-  try {
-    if (reconnectPending && handle) {
-      if (await hasPermission(true)) { reconnectPending = false; await connected_(handle.name, " (saves directly)"); }
-      return;
+const hasKey = (sh, n) => KEY_COLS.some(c => { const v = sh.value(n, c); return v !== null && v.trim() !== ""; });
+
+function learnDealer(sh) {
+  const D = { rows: {}, incomplete: [], ofd: [], tracking: {}, months: {}, money: null };
+  let toGet = 0, got = 0, pending = 0;
+  const nums = [...sh.rows.keys()].filter(n => n >= 2).sort((a, b) => a - b);
+  for (const n of nums) {
+    const amt = n >= FIRST_DATA_ROW ? (num(sh.value(n, ORDER_COLS.amount)) || 0) : 0;
+    const com = n >= FIRST_DATA_ROW ? (num(sh.value(n, COMMISSION_COL)) || 0) : 0;   // Google sends the calculated value
+    const delivered = String(sh.value(n, ORDER_COLS.status) || "").trim().toLowerCase() === "delivered";
+    if (delivered) toGet += amt + com; else pending += amt + com;
+    got += num(sh.value(n, PAYMENT_COLS.amount)) || 0;
+    if (n < FIRST_DATA_ROW || !hasKey(sh, n)) continue;
+    const r = readOrderRow(sh, n); D.rows[n] = r;
+    const st = String(r.status || "").trim().toLowerCase();
+    if (!DONE_STATUSES.includes(st)) D.incomplete.push(r);
+    if (st === OFD.toLowerCase()) D.ofd.push(r);
+    if (r.tracking) { const t = r.tracking.trim().toUpperCase(); (D.tracking[t] = D.tracking[t] || []).push(r); }
+    if (r.dateObj && st === "delivered") {
+      const cb = num(r.cashback) || 0, bx = num(r.bulk_extra) || 0, cut = num(r.commission_cut) || 0;
+      if (amt || com || cb || bx || cut) {
+        const key = `${r.dateObj.getFullYear()}-${String(r.dateObj.getMonth() + 1).padStart(2, "0")}`;
+        const m = D.months[key] = D.months[key] || { orders: 0, com: 0, cb: 0, bx: 0, cut: 0 };
+        m.orders++; m.com += com; m.cb += cb; m.bx += bx; m.cut += cut;
+      }
     }
-    if (canSaveInPlace) {
-      let h; try { [h] = await window.showOpenFilePicker({ types: [{ description: "Excel", accept: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"] } }] }); } catch (e) { return; }
-      handle = h; reconnectPending = false;
-      if (!(await hasPermission(true))) { setStatus("Permission not given"); return; }
-      await idb.set("handle", handle);
-      remote = null; try { localStorage.removeItem("ol_remote"); } catch (e) {}
-      $("dlgConnect").close();
-      await connected_(handle.name, " (saves directly)");
-    } else { remote = null; try { localStorage.removeItem("ol_remote"); } catch (e) {} $("dlgConnect").close(); $("fileInput").click(); }
-  } catch (e) { setStatus("Error: " + e.message); }
-});
-$("fileInput").addEventListener("change", async e => {
-  const f = e.target.files[0]; if (!f) return;
-  memBytes = new Uint8Array(await f.arrayBuffer()); memName = f.name;
-  try { await connected_(memName, " (updated copy downloads after each add)"); } catch (err) { setStatus("Error: " + err.message); memBytes = null; }
-});
+  }
+  D.money = { toGet, got, due: toGet - got, pending };
+  return D;
+}
 
-/* ======================= forms ======================= */
+function parseClients(sh) {
+  const blocks = [];
+  if (!sh) return blocks;
+  const maxC = sh.maxCol(), hdr = c => normKey(sh.value(2, c) || "");
+  for (let c = 1; c <= maxC; c++) {
+    const h = hdr(c);
+    if (h !== "payments" && h !== "transactionamount") continue;
+    const b = { amtCol: c, odCol: hdr(c - 1) === "orderdate" ? c - 1 : null, legacy: h === "payments" || hdr(c - 1) !== "orderdate" };
+    for (let k = c + 1; k <= Math.min(maxC, c + 8); k++) {
+      const hk = hdr(k);
+      if (hk === "payments" || hk === "transactionamount" || hk === "orderdate") break;
+      if (hk === "total" && !b.totalCol) b.totalCol = k;
+      else if (hk === "given" && !b.givenCol) b.givenCol = k;
+      else if (hk === "date" && b.givenCol && !b.dateCol) b.dateCol = k;
+      else if (hk === "totalgiven" && !b.tgCol) b.tgCol = k;
+      else if (hk === "left" && !b.leftCol) b.leftCol = k;
+    }
+    b.name = String(sh.value(1, c) || (b.odCol && sh.value(1, b.odCol)) || "").trim();
+    b.entries = []; b.owed = 0; b.given = 0;
+    const last = sh.lastRow([b.odCol, b.amtCol, b.givenCol, b.dateCol].filter(Boolean));
+    for (let n = FIRST_DATA_ROW; n <= last; n++) {
+      const e = { row: n, od: b.odCol ? sh.date(n, b.odCol) : null, amt: num(sh.value(n, b.amtCol)), given: b.givenCol ? num(sh.value(n, b.givenCol)) : null,
+                  gdate: b.dateCol ? (sh.date(n, b.dateCol) || sh.value(n, b.dateCol)) : null };
+      if (e.amt === null && e.given === null && !e.od && !e.gdate) continue;
+      b.entries.push(e); b.owed += e.amt || 0; b.given += e.given || 0;
+    }
+    b.left = b.owed - b.given;
+    if (b.name) blocks.push(b);
+  }
+  return blocks;
+}
+
+function learn() {
+  if (!DATA) return;
+  const S = sheetsFrom(DATA);
+  const N = { dealers: {}, lists: {}, pinAddr: {}, paidByFor: {}, paidByForCard: {}, mobiles: [], clients: [], clientsLegacy: false };
+  const add = (key, v) => { if (v === null || v === undefined || String(v).trim() === "") return; (N.lists[key] = N.lists[key] || []).push(String(v).trim()); };
+  for (const k of Object.keys(DEALERS)) {
+    if (!S[k]) continue;
+    const D = N.dealers[k] = learnDealer(S[k]);
+    for (const r of Object.values(D.rows).sort((a, b) => a.row - b.row)) {
+      for (const f of Object.keys(ORDER_COLS)) if (!NO_LIST.has(f)) add("o." + f, r[f]);
+      add("o.amount", r.amount); add("o.return", r.return);
+      if (r.address) { const pins = String(r.address).match(/\b\d{6}\b/g); if (pins) N.pinAddr[pins[pins.length - 1]] = String(r.address).trim(); }
+      if (r.by && r.paid_by) N.paidByFor[r.by.trim()] = r.paid_by.trim();
+      if (r.card && r.paid_by) N.paidByForCard[r.card.trim()] = r.paid_by.trim();
+      if (r.mobile && /^\d{10}$/.test(r.mobile.trim())) N.mobiles.unshift({ num: r.mobile.trim(), name: String(r.name || "").trim() });
+    }
+    for (const n of S[k].rows.keys()) if (n >= FIRST_DATA_ROW) { add("p.sender", S[k].value(n, PAYMENT_COLS.sender)); add("p.bank", S[k].value(n, PAYMENT_COLS.bank)); }
+  }
+  N.clients = parseClients(S.clients);
+  N.clientsLegacy = N.clients.some(b => b.legacy);
+  for (const b of N.clients) add("o.paid_by", b.name);
+  for (const k of Object.keys(N.lists)) N.lists[k] = [...new Set(N.lists[k].reverse())];
+  L = N;
+  refreshDatalists(); renderAll();
+}
+
+/* ======================= order form ======================= */
 function buildForm(container, fields, prefix) {
-  $(container).innerHTML = fields.map(([k, label, type, req, wide]) =>
-    `<div class="field${wide ? " wide" : ""}" id="f-${prefix}${k}"><label class="${req ? "req" : ""}" for="${prefix}${k}">${label}</label>
+  const html = f => fieldHtml(f, prefix);
+  if (container === "orderForm") {
+    $(container).innerHTML = `<div class="sect">Details You Fill In Yourself</div><div class="grid">${fields.filter(f => !MSG_FIELDS.has(f[0])).map(html).join("")}</div>
+      <div class="sect msg">Details From The Out-For-Delivery Message</div><div class="grid">${fields.filter(f => MSG_FIELDS.has(f[0])).map(html).join("")}</div>`;
+    return;
+  }
+  $(container).innerHTML = fields.map(html).join("");
+}
+function fieldHtml([k, label, type, req, wide], prefix) {
+  return `<div class="field${wide ? " wide" : ""}${k === "pin" ? " hidden" : ""}" id="f-${prefix}${k}"><label class="${req ? "req" : ""}" for="${prefix}${k}">${label}</label>
      <input id="${prefix}${k}" type="${type === "date" ? "date" : "text"}" ${type === "number" ? 'inputmode="decimal"' : ""} ${NO_LIST.has(k) ? "" : `list="dl-${prefix}${k}"`} autocomplete="off">
-     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}${k === "commission" ? '<small>Return − Amount. Type any two of the three</small>' : ""}${k === "have_to_return" ? '<small>Amount + Commission cut. Fill either one</small>' : ""}</div>`).join("");
+     ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}${k === "commission" ? '<small>Return − Amount. Type any two of the three</small>' : ""}${k === "have_to_return" ? '<small>Amount + Commission cut. Fill either one</small>' : ""}${k === "paid_by" ? '<small>Whose card paid. Links to Clients Payments</small>' : ""}</div>`;
 }
 buildForm("orderForm", ORDER_FIELDS, "o.");
 buildForm("payForm", PAY_FIELDS, "p.");
@@ -757,43 +586,77 @@ const field = (prefix, k) => document.getElementById(prefix + k);
 function refreshDatalists() {
   const keys = [...ORDER_FIELDS.map(f => "o." + f[0]), ...PAY_FIELDS.map(f => "p." + f[0])].filter(k => !NO_LIST.has(k.slice(2)));
   $("datalists").innerHTML = keys.map(key => {
-    const f = key.slice(2), vals = [...new Set([...(hist[key] || []), ...(learned.lists[key] || []), ...(DEFAULT_LISTS[f] || [])])];
+    const f = key.slice(2), vals = [...new Set([...(hist[key] || []), ...(L.lists[key] || []), ...(DEFAULT_LISTS[f] || [])])];
     const allNum = vals.length && vals.every(v => /^-?\d+(\.\d+)?$/.test(v));
     vals.sort(allNum ? (x, y) => x - y : (x, y) => x.localeCompare(y, undefined, { sensitivity: "base", numeric: true }));
     return `<datalist id="dl-${key}">${vals.slice(0, 400).map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
   }).join("");
 }
 
-function resetOrderForm() {
+let editRow = null;        // row number being completed, or null for a new order
+let ticked = new Set();    // other rows in the same package (same message, different cards)
+let pkgQty = 0;            // phones in the package, from the message
+let editOrig = null;       // that row's values when loaded
+let trioOrder = [];
+
+function setField(k, v, lock = false) {
+  if (v === undefined || v === null || v === "") return;
+  field("o.", k).value = v instanceof Date ? isoDate(v) : v;
+  $("f-o." + k).classList.add("filled");
+  if (lock) lockField(k);
+}
+function lockField(k, why = "from message") {
+  const box = $("f-o." + k), inp = field("o.", k);
+  inp.readOnly = true; box.classList.add("locked");
+  const old = box.querySelector(".lock"); if (old) old.remove();
+  box.querySelector("label").insertAdjacentHTML("beforeend", `<span class="lock">🔒 ${why} · <a data-unlock="${k}">edit</a></span>`);
+}
+function unlockField(k) {
+  const box = $("f-o." + k), inp = field("o.", k);
+  inp.readOnly = false; box.classList.remove("locked");
+  const l = box.querySelector(".lock"); if (l) l.remove();
+}
+$("orderForm").addEventListener("click", e => { const k = e.target.dataset.unlock; if (k) { unlockField(k); field("o.", k).focus(); } });
+
+function resetOrderForm(keepPaste) {
   for (const [k] of ORDER_FIELDS) { unlockField(k); field("o.", k).value = ""; field("o.", k).placeholder = ""; $("f-o." + k).classList.remove("filled"); }
   field("o.", "date").value = isoDate(today());
-  field("o.", "status").value = OFD;
+  field("o.", "status").value = ORDERED;
   field("o.", "qty").value = "1";
-  $("pasteNote").innerHTML = "";
-  trioOrder = [];
+  if (!keepPaste) { $("pasteBox").value = ""; $("pasteNote").innerHTML = ""; }
+  trioOrder = []; editRow = null; editOrig = null; ticked = new Set(); pkgQty = 0;
+  updateMode(); markMissing();
 }
-/* Amount, Return amount, Commission: type any two, the third is calculated */
+function updateMode() {
+  if (editRow) {
+    $("modeBar").style.display = "flex";
+    const rows = [editRow, ...[...ticked].sort((a, b) => a - b)];
+    const pk = rows.length > 1 || pkgQty > 1;
+    $("modeBar").innerHTML = `✏️ Completing ${rows.length > 1 ? `rows ${rows.join(", ")}` : `row ${editRow}`} of ${esc(DEALERS[dealer].name)}'s sheet` +
+      (pk ? ` <span style="font-weight:500">· package ${pkgQty ? `of ${pkgQty} phone${pkgQty > 1 ? "s" : ""}` : ""} · ${rows.length} row${rows.length > 1 ? "s" : ""} ticked${pkgQty && rows.length !== pkgQty ? ` <b style="color:var(--err)">(tick ${pkgQty - rows.length > 0 ? pkgQty - rows.length + " more" : rows.length - pkgQty + " fewer"})</b>` : ""}</span>` : "") +
+      ` <button class="btn small ghost" id="btnCancelEdit">Cancel</button>`;
+    $("btnCancelEdit").onclick = () => { resetOrderForm(); renderIncomplete(); };
+    $("formTitle").textContent = rows.length > 1 ? `Complete Rows ${rows.join(", ")}` : `Complete Row ${editRow}`;
+    $("btnSaveOrder").textContent = rows.length > 1 ? `Update ${rows.length} rows` : `Update row ${editRow}`;
+  } else {
+    $("modeBar").style.display = "none";
+    $("formTitle").textContent = "New Order";
+    $("btnSaveOrder").textContent = "Save new order";
+  }
+}
+
+/* Amount / Return / Commission: type any two, the third is calculated */
 const TRIO = ["amount", "return", "commission"];
-let trioOrder = [];
-const numOf = k => { const v = field("o.", k).value.replace(/[₹,\s]/g, ""); return v !== "" && isFinite(+v) ? +v : null; };
-const round2 = n => Math.round(n * 100) / 100;
-/* Commission cut <-> I have to return: filled only when one of them has a value */
-function updateTotals() {
-  const a = numOf("amount"), c = numOf("commission_cut");
-  field("o.", "have_to_return").value = c === null || a === null ? "" : round2(a + c);
-}
-function fromHaveToReturn() {
-  const a = numOf("amount"), h = numOf("have_to_return");
-  field("o.", "commission_cut").value = h === null || a === null ? "" : round2(h - a);
-}
+const numOf = k => num(field("o.", k).value);
+function updateTotals() { const a = numOf("amount"), c = numOf("commission_cut"); field("o.", "have_to_return").value = c === null || a === null ? "" : round2(a + c); }
+function fromHaveToReturn() { const a = numOf("amount"), h = numOf("have_to_return"); field("o.", "commission_cut").value = h === null || a === null ? "" : round2(h - a); }
 function onTrioInput(k) {
   trioOrder = trioOrder.filter(x => x !== k);
   if (numOf(k) !== null) trioOrder.push(k);
   if (numOf(k) !== null && trioOrder.length >= 2) {
     const [x, y] = trioOrder.slice(-2), target = TRIO.find(t => t !== x && t !== y);
     const a = numOf("amount"), r = numOf("return"), c = numOf("commission");
-    const v = target === "commission" ? r - a : target === "return" ? a + c : r - c;
-    field("o.", target).value = round2(v);
+    field("o.", target).value = round2(target === "commission" ? r - a : target === "return" ? a + c : r - c);
     $("f-o." + target).classList.add("filled");
     trioOrder = trioOrder.filter(t => t !== target);
   }
@@ -803,102 +666,67 @@ for (const k of TRIO) field("o.", k).addEventListener("input", () => onTrioInput
 field("o.", "commission_cut").addEventListener("input", updateTotals);
 field("o.", "have_to_return").addEventListener("input", fromHaveToReturn);
 
-function resetPayForm() { for (const [k] of PAY_FIELDS) field("p.", k).value = ""; field("p.", "date").value = isoDate(today()); }
-resetOrderForm(); resetPayForm(); refreshDatalists();
-
-function setField(k, v, mark = true, lock = false) {
-  if (v === undefined || v === null || v === "") return;
-  field("o.", k).value = v;
-  if (mark) $("f-o." + k).classList.add("filled");
-  if (lock) lockField(k);
+/* pin -> address, last 4 digits -> mobile, smart fills */
+function applyPin() {
+  const pin = field("o.", "pin").value.trim();
+  if (!/^\d{6}$/.test(pin) || field("o.", "address").readOnly) return "";
+  const addr = L.pinAddr[pin] || (hist["o.address"] || []).find(a => a.includes(pin)) || Object.values(addrMap).find(a => a.includes(pin));
+  if (addr) { setField("address", addr, true); return ""; }
+  return `No saved address for pin ${pin} yet. Type it once and it will be remembered.`;
 }
-function lockField(k) {
-  const box = $("f-o." + k), inp = field("o.", k);
-  inp.readOnly = true; box.classList.add("locked");
-  if (!box.querySelector(".lock")) box.querySelector("label").insertAdjacentHTML("beforeend", `<span class="lock">🔒 from message · <a data-unlock="${k}">edit</a></span>`);
-}
-function unlockField(k) {
-  const box = $("f-o." + k), inp = field("o.", k);
-  inp.readOnly = false; box.classList.remove("locked");
-  const l = box.querySelector(".lock"); if (l) l.remove();
-}
-$("orderForm").addEventListener("click", e => { const k = e.target.dataset.unlock; if (k) { unlockField(k); field("o.", k).focus(); } });
-
-/* last 4 digits -> full mobile number from earlier records */
 function resolveMobile(raw, name) {
   let d = String(raw || "").replace(/\D/g, "");
   if (d.length === 12 && d.startsWith("91")) d = d.slice(2);
   if (d.length === 11 && d.startsWith("0")) d = d.slice(1);
   if (d.length === 10) return { full: d };
   if (d.length < 3 || d.length > 6) return { none: true, digits: d };
-  const all = [...learned.mobiles, ...(hist["o.mobile"] || []).map(num => ({ num: String(num), name: "" }))];
   const byNum = new Map();
-  for (const m of all) if (m.num.endsWith(d)) { const e = byNum.get(m.num) || { num: m.num, names: new Set() }; if (m.name) e.names.add(m.name); byNum.set(m.num, e); }
+  for (const m of [...L.mobiles, ...(hist["o.mobile"] || []).map(n => ({ num: String(n), name: "" }))]) if (m.num.endsWith(d)) {
+    const e = byNum.get(m.num) || { num: m.num, names: new Set() }; if (m.name) e.names.add(m.name); byNum.set(m.num, e);
+  }
   const cands = [...byNum.values()];
   if (cands.length === 1) return { full: cands[0].num, from: d };
-  const nm = String(name || "").trim().toLowerCase();
-  const sameName = cands.filter(c => [...c.names].some(n => n.toLowerCase() === nm));
-  if (nm && sameName.length === 1) return { full: sameName[0].num, from: d };
+  const nm = String(name || "").trim().toLowerCase(), same = cands.filter(c => [...c.names].some(n => n.toLowerCase() === nm));
+  if (nm && same.length === 1) return { full: same[0].num, from: d };
   if (cands.length) return { choices: cands.map(c => ({ num: c.num, names: [...c.names] })), digits: d };
   return { none: true, digits: d };
 }
-function mobileNote(res) {
-  if (res.full) return res.from ? { kind: "ok", html: `📱 Last 4 digits ${esc(res.from)} matched <b>${esc(res.full)}</b>.` } : null;
-  if (res.choices) return { kind: "warn", html: `📱 More than one saved number ends in ${esc(res.digits)}. Pick one: ` +
-      res.choices.map(c => `<button class="btn small ghost pick" data-mobile="${c.num}">${c.num}${c.names.length ? " (" + esc(c.names.slice(0, 2).join(", ")) + ")" : ""}</button>`).join("") };
-  if (res.digits) return { kind: "warn", html: `📱 No saved number ends in ${esc(res.digits)}. Type the full 10-digit number in Mobile no.` };
+function fillMobile(raw, lock) {
+  const res = resolveMobile(raw, field("o.", "name").value);
+  if (res.full) { setField("mobile", res.full, lock); return res.from ? { kind: "ok", html: `📱 Last 4 digits ${esc(res.from)} matched <b>${esc(res.full)}</b>.` } : null; }
+  field("o.", "mobile").value = ""; field("o.", "mobile").placeholder = res.digits ? `ends in ${res.digits}` : "";
+  if (res.choices) return { kind: "warn", html: `📱 More than one saved number ends in ${esc(res.digits)}. Pick one: ` + res.choices.map(c => `<button class="btn small ghost pick" data-mobile="${c.num}">${c.num}${c.names.length ? " (" + esc(c.names.slice(0, 2).join(", ")) + ")" : ""}</button>`).join("") };
+  if (res.digits) return { kind: "warn", html: `📱 No saved number ends in ${esc(res.digits)}. Type the full 10-digit number.` };
   return null;
 }
-function fillMobile(raw, fromMessage) {
-  const res = resolveMobile(raw, field("o.", "name").value);
-  if (res.full) setField("mobile", res.full, true, fromMessage);
-  else { field("o.", "mobile").value = ""; field("o.", "mobile").placeholder = res.digits ? `ends in ${res.digits}` : ""; }
-  return mobileNote(res);
-}
-$("pasteNote").addEventListener("click", e => {
-  const m = e.target.dataset.mobile; if (!m) return;
-  setField("mobile", m, true, true);
-  e.target.closest(".note").innerHTML = `📱 Mobile set to <b>${esc(m)}</b>.`;
-});
+field("o.", "pin").addEventListener("change", () => { const w = applyPin(); if (w) note("pasteNote", "warn", w); });
+field("o.", "by").addEventListener("change", () => { const v = field("o.", "by").value.trim(); if (!field("o.", "paid_by").value && L.paidByFor[v]) setField("paid_by", L.paidByFor[v]); });
+field("o.", "card").addEventListener("change", () => { const v = field("o.", "card").value.trim(); if (!field("o.", "paid_by").value && L.paidByForCard[v]) setField("paid_by", L.paidByForCard[v]); });
+field("o.", "tracking").addEventListener("change", () => { if (!field("o.", "platform").value) setField("platform", guessPlatform(field("o.", "tracking").value)); });
+field("o.", "address").addEventListener("change", () => { const a = field("o.", "address"); if (addrMap[a.value.trim().toUpperCase()]) a.value = addrMap[a.value.trim().toUpperCase()]; });
 field("o.", "mobile").addEventListener("change", () => {
   const v = field("o.", "mobile").value, d = v.replace(/\D/g, "");
-  if (d.length >= 3 && d.length <= 6) { $("pasteNote").querySelectorAll(".note").forEach(x => { if (x.textContent.startsWith("📱")) x.remove(); }); const n = fillMobile(v, false); if (n) $("pasteNote").insertAdjacentHTML("beforeend", `<div class="note ${n.kind}">${n.html}</div>`); }
+  if (d.length >= 3 && d.length <= 6) { const n = fillMobile(v, false); if (n) $("pasteNote").insertAdjacentHTML("beforeend", `<div class="note ${n.kind}">${n.html}</div>`); }
 });
-function applyPin() {
-  const pin = field("o.", "pin").value.trim();
-  if (!/^\d{6}$/.test(pin)) return "";
-  const fromShortcut = Object.values(addrMap).find(a => a.includes(pin));
-  const fromHist = (hist["o.address"] || []).find(a => a.includes(pin));
-  const addr = learned.pinAddr[pin] || fromHist || fromShortcut;
-  if (addr) { setField("address", addr); return ""; }
-  return `No saved address for pin ${pin} yet. Type it once and it will be remembered.`;
-}
-field("o.", "pin").addEventListener("change", () => { const w = applyPin(); if (w) note("pasteNote", "warn", w); });
-field("o.", "by").addEventListener("change", () => { const v = field("o.", "by").value.trim(); if (!field("o.", "paid_by").value && learned.paidByFor[v]) setField("paid_by", learned.paidByFor[v]); });
-field("o.", "card").addEventListener("change", () => { const v = field("o.", "card").value.trim(); if (!field("o.", "paid_by").value && learned.paidByForCard[v]) setField("paid_by", learned.paidByForCard[v]); });
-field("o.", "tracking").addEventListener("change", () => { trackingWarning(); if (!field("o.", "platform").value) setField("platform", guessPlatform(field("o.", "tracking").value)); });
-field("o.", "address").addEventListener("change", () => { const a = field("o.", "address"); if (addrMap[a.value.trim().toUpperCase()]) a.value = addrMap[a.value.trim().toUpperCase()]; });
+$("pasteNote").addEventListener("click", e => {
+  if (e.target.dataset.mobile) { setField("mobile", e.target.dataset.mobile, true); e.target.closest(".note").innerHTML = `📱 Mobile set to <b>${esc(e.target.dataset.mobile)}</b>.`; }
+  if (e.target.dataset.row) selectRow(+e.target.dataset.row);
+});
 
-function note(id, kind, html) { $(id).innerHTML = html ? `<div class="note ${kind}">${html}</div>` : ""; }
-
-/* ---- parse the out-for-delivery message ---- */
+/* ---- out-for-delivery message ---- */
 function parseOfdMessage(text) {
   const out = {}, unknown = [];
   const clean = text.replace(/[​-‏‪-‮⁦-⁩﻿︎️]/g, "").replace(/[  -   　\t]/g, " ");
   for (let line of clean.split(/\r?\n/)) {
-    line = line.replace(/^\s*\[[^\]]*\]\s*[^:]+:\s*/, "");          // copied WhatsApp header
-    line = line.replace(/^[^\p{L}]+/u, "").trim();                    // bullets, emoji, *bold* marks
+    line = line.replace(/^\s*\[[^\]]*\]\s*[^:]+:\s*/, "").replace(/^[^\p{L}]+/u, "").trim();
     if (!line) continue;
     let label = null, val = null;
-    const m = line.match(/^(\p{L}[\p{L} .]*?)\s*[^\p{L}\p{N}\s]+\s*(.*)$/u);   // label, then symbols (👉🏻 : - * ...), then value
+    const m = line.match(/^(\p{L}[\p{L} .]*?)\s*[^\p{L}\p{N}\s]+\s*(.*)$/u);
     if (m && ALIASES[normKey(m[1])]) { label = m[1]; val = m[2]; }
-    else {                                                             // no symbol: "Quantity 2"
+    else {
       const words = line.split(/\s+/);
-      for (let i = Math.min(3, words.length - 1); i >= 1; i--) {
-        if (ALIASES[normKey(words.slice(0, i).join(""))]) { label = words.slice(0, i).join(" "); val = words.slice(i).join(" "); break; }
-      }
-      if (!label && m) { if (m[2].trim()) unknown.push(m[1].trim()); continue; }
-      if (!label) continue;
+      for (let i = Math.min(3, words.length - 1); i >= 1; i--) if (ALIASES[normKey(words.slice(0, i).join(""))]) { label = words.slice(0, i).join(" "); val = words.slice(i).join(" "); break; }
+      if (!label) { if (m && m[2].trim()) unknown.push(m[1].trim()); continue; }
     }
     const key = ALIASES[normKey(label)];
     val = val.replace(/^[^\p{L}\p{N}+(]+/u, "").replace(/[\s*_~]+$/, "").trim();
@@ -907,358 +735,644 @@ function parseOfdMessage(text) {
   }
   return { data: out, unknown };
 }
-function trackingWarning(quiet) {
-  const t = field("o.", "tracking").value.trim().toUpperCase();
-  const hits = learned.tracking[t];
-  if (!t || !hits) return false;
-  const html = `⚠ Tracking <b>${esc(t)}</b> is already in the sheet: ` + hits.map(h => `row ${h.row} (${esc(h.name || "")}, order date ${fmtDate(h.date) || "-"}, ${esc(h.status || "no status")})`).join("; ") + `. You'll be asked what to do when you press Add.`;
-  if (!quiet) note("pasteNote", "warn", html);
-  return html;
-}
-$("pasteBox").addEventListener("input", () => {
-  const text = $("pasteBox").value; if (!text.trim()) return;
+let lastPaste = null;
+const sameModel = (a, b) => { const x = normModel(a), y = normModel(b); return x && y && (x === y || x.includes(y) || y.includes(x)); };
+function applyPaste() {
+  const text = $("pasteBox").value; if (!text.trim()) { lastPaste = null; return; }
   const { data, unknown } = parseOfdMessage(text);
   if (!Object.keys(data).length) { note("pasteNote", "err", "Couldn't find Parcel Name, Model, Tracking etc. in that text."); return; }
-  for (const k of ["name", "model", "tracking", "qty", "mobile", "pin", "address"]) unlockField(k);
-  for (const k of ["name", "model", "tracking", "qty", "pin"]) if (data[k]) setField(k, k === "qty" ? data[k].replace(/\D/g, "") || "1" : data[k], true, true);
+  lastPaste = data;
+  const D = L.dealers[dealer] || { incomplete: [], tracking: {} };
+  pkgQty = Math.max(1, parseInt(String(data.qty || "1").replace(/\D/g, ""), 10) || 1);
+  // saved orders with this tracking ID? open them (all of them for a package)
+  if (!editRow && data.tracking) {
+    const hits = D.incomplete.filter(r => String(r.tracking || "").trim().toUpperCase() === data.tracking.trim().toUpperCase());
+    if (hits.length) { selectRow(hits[0].row, hits.slice(1).map(r => r.row)); return; }
+  }
+  // a package of several phones: open the first matching order and tick the rest
+  if (!editRow && pkgQty > 1 && data.model) {
+    const same = D.incomplete.filter(r => r.model && sameModel(r.model, data.model) && !r.tracking);
+    if (same.length) { selectRow(same[0].row, same.slice(1, pkgQty).map(r => r.row)); return; }
+  }
   const notes = [];
-  if (data.mobile) { const n = fillMobile(data.mobile, true); if (n) notes.push(n); }
-  const w = applyPin(); if (w) notes.push({ kind: "warn", html: w }); else if (field("o.", "address").value && data.pin) lockField("address");
+  for (const k of ["name", "tracking", "pin"]) if (data[k] && !field("o.", k).readOnly) setField(k, data[k], true);
+  if (data.model) {
+    if (field("o.", "model").readOnly && editRow) {
+      const rowModel = field("o.", "model").value;
+      if (normModel(rowModel) && normModel(rowModel) !== normModel(data.model) && !normModel(rowModel).includes(normModel(data.model)) && !normModel(data.model).includes(normModel(rowModel)))
+        notes.push({ kind: "warn", html: `⚠ The message says <b>${esc(data.model)}</b> but row ${editRow} is <b>${esc(rowModel)}</b>. Check you picked the right order.` });
+    } else if (!field("o.", "model").value) setField("model", data.model, true);
+  }
+  if (data.mobile && !field("o.", "mobile").readOnly) { const n = fillMobile(data.mobile, true); if (n) notes.push(n); }
+  const w = applyPin(); if (w) notes.push({ kind: "warn", html: w });
   if (!field("o.", "platform").value) setField("platform", guessPlatform(data.tracking));
+  const st = field("o.", "status").value.trim().toLowerCase();
+  if (!st || st === ORDERED.toLowerCase()) field("o.", "status").value = OFD;
+  if (!field("o.", "delivery_date").value) setField("delivery_date", today());
   if (unknown.length) notes.push({ kind: "warn", html: `Ignored: ${unknown.map(esc).join(", ")}` });
-  const tw = trackingWarning(true); if (tw) notes.push({ kind: "warn", html: tw });
-  notes.unshift({ kind: "ok", html: "✔ Filled from the message. Locked boxes (🔒) came from the message; fill the rest." });
+  if (!editRow) {
+    const cands = D.incomplete.filter(r => data.model && r.model && sameModel(r.model, data.model));
+    renderIncomplete(cands.map(r => r.row));
+    if (cands.length) notes.unshift({ kind: "warn", html: `👆 ${cands.length === 1 ? "This looks like" : "This could be one of"} your saved order${cands.length > 1 ? "s" : ""}: ` +
+      cands.map(r => `<button class="btn small pick" data-row="${r.row}">Row ${r.row} · ${fmtDate(r.dateObj)} · ${esc(r.card || "no card")}</button>`).join("") + `<br>Tap the right one, or ignore this to save it as a new row.` });
+    if (data.tracking && D.tracking[data.tracking.trim().toUpperCase()]) notes.push({ kind: "warn", html: `⚠ Tracking ${esc(data.tracking)} is already in the sheet. You'll be asked what to do when you save.` });
+  }
+  if (pkgQty > 1) notes.push({ kind: "info", html: `📦 This package has <b>${pkgQty} phones</b>. Each phone is its own row with Quantity 1. ${editRow ? `Tick ${pkgQty} rows in the list above (each row keeps its own card and amount), then press Update.` : "Save each phone's order first, then paste this message again."}` });
+  notes.unshift({ kind: "ok", html: editRow ? `✔ Message added to ${ticked.size ? `rows ${[editRow, ...ticked].join(", ")}` : `row ${editRow}`}. Check the boxes and press Update.` : "✔ Filled from the message." });
+  updateMode();
   $("pasteNote").innerHTML = notes.map(n => `<div class="note ${n.kind}">${n.html}</div>`).join("");
+}
+$("pasteBox").addEventListener("input", () => { applyPaste(); markMissing(); });
+
+/* ---- open an incomplete row ---- */
+function selectRow(n, extra = []) {
+  const r = (L.dealers[dealer] || { rows: {} }).rows[n];
+  if (!r) return;
+  const keepQty = pkgQty;
+  resetOrderForm(true); note("orderNote");
+  editRow = n; editOrig = r; ticked = new Set(extra.filter(x => x !== n)); pkgQty = keepQty;
+  const vals = { ...r, date: r.dateObj, delivery_date: r.deliveryObj };
+  for (const [k] of ORDER_FIELDS) {
+    if (["pin", "have_to_return", "status"].includes(k)) continue;
+    const v = vals[k];
+    if (v !== null && v !== undefined && v !== "") setField(k, v, ["card", "paid_by", "model", "amount", "date", "by", "platform"].includes(k) ? "row" : false);
+  }
+  for (const k of ["card", "paid_by", "model", "amount", "date", "by", "platform"]) if (field("o.", k).value) lockField(k, `row ${n}`);
+  field("o.", "status").value = r.status || ORDERED;
+  field("o.", "qty").value = "1";
+  trioOrder = ["amount", "return"].filter(k => field("o.", k).value);
+  updateTotals();
+  updateMode(); renderIncomplete();
+  applyPaste();
+  markMissing();
+  $("orderForm").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* red tint on the boxes an incomplete row still needs */
+const NEEDED = ["date", "by", "platform", "model", "card", "paid_by", "amount", "return", "name", "mobile", "tracking", "delivery_date", "address"];
+function markMissing() {
+  for (const [k] of ORDER_FIELDS) $("f-o." + k).classList.remove("missing");
+  if (!editRow) return;
+  const rupay = /rupay/i.test(field("o.", "platform").value);
+  for (const k of NEEDED) {
+    if (rupay && ["model", "name", "mobile", "tracking", "address"].includes(k)) continue;
+    if (!field("o.", k).value.trim()) $("f-o." + k).classList.add("missing");
+  }
+  const st = field("o.", "status").value.trim().toLowerCase();
+  if (!st || st === ORDERED.toLowerCase()) $("f-o.status").classList.add("missing");
+}
+$("orderForm").addEventListener("input", () => { if (editRow) markMissing(); });
+$("orderForm").addEventListener("change", () => { if (editRow) markMissing(); });
+
+function renderIncomplete(cands = []) {
+  const D = L.dealers[dealer];
+  $("incCount").textContent = D ? D.incomplete.length : 0;
+  if (!connected) return;
+  if (!D || !D.incomplete.length) { $("incList").innerHTML = `<div class="empty">No orders waiting. Everything has delivery details.</div>`; return; }
+  $("incList").innerHTML = D.incomplete.map(r => {
+    const days = r.dateObj ? Math.round((today() - r.dateObj) / 86400000) : null;
+    const on = r.row === editRow || ticked.has(r.row);
+    return `<div class="incrow ${on ? "sel" : ""} ${cands.includes(r.row) ? "cand" : ""}" data-row="${r.row}">
+      <input type="checkbox" class="tick" data-tick="${r.row}" ${on ? "checked" : ""} title="Same package: tick every row in it">
+      <span class="rowno">Row ${r.row}</span>
+      <div class="incinfo"><b>${esc(r.model || r.platform || "No model")}</b> · ₹${esc(r.amount || "-")}<br>
+        <span class="sub">${fmtDate(r.dateObj)}${days !== null ? ` (${days}d ago)` : ""} · ${esc(r.by || "")} · ${esc(r.card || "no card")}${r.tracking ? " · " + esc(r.tracking) : ""}</span></div>
+      <button class="btn small ghost" data-addtrack="${r.row}" title="Add tracking ID now">+ Tracking</button>
+    </div>`; }).join("");
+}
+$("incList").addEventListener("click", async e => {
+  const t = e.target.closest("[data-addtrack]");
+  if (t) {
+    e.stopPropagation();
+    const n = +t.dataset.addtrack, id = prompt(`Tracking ID for row ${n}:`);
+    if (!id || !id.trim()) return;
+    try {
+      await withData(S => {
+        const sh = S[dealer];
+        const dupe = sh.findTracking(id.trim()).filter(x => x !== n);
+        if (dupe.length && !confirm(`Tracking ${id.trim()} is already on row ${dupe.join(", ")}. Add it anyway?`)) return { save: false, cancelled: true };
+        sh.set(n, ORDER_COLS.tracking, id.trim());
+        if (!sh.value(n, ORDER_COLS.platform)) { const p = guessPlatform(id); if (p) sh.set(n, ORDER_COLS.platform, p); }
+      });
+      note("pasteNote", "ok", `✔ Tracking added to row ${n}. When its out-for-delivery message comes, it will match by itself.`);
+    } catch (err) { note("pasteNote", "err", esc(err.message)); }
+    return;
+  }
+  const tk = e.target.closest("[data-tick]");
+  if (tk) {
+    e.stopPropagation();
+    const n = +tk.dataset.tick;
+    if (!editRow) { selectRow(n); return; }
+    if (n === editRow) { tk.checked = true; return; }
+    if (tk.checked) ticked.add(n); else ticked.delete(n);
+    updateMode(); renderIncomplete();
+    return;
+  }
+  const row = e.target.closest(".incrow"); if (row) selectRow(+row.dataset.row);
 });
 
-function readForm(fields, prefix) {
+/* ---- save ---- */
+function readOrderForm() {
   const data = {}, problems = [];
-  for (const [k, label, type, req] of fields) {
-    if (k === "pin" || COMPUTED.has(k)) continue;
-    const raw = field(prefix, k).value.trim();
+  for (const [k, label, type, req] of ORDER_FIELDS) {
+    if (k === "pin" || k === "have_to_return") continue;
+    const raw = field("o.", k).value.trim();
     if (!raw) { if (req) problems.push(`${label} is empty`); continue; }
     try {
       if (k === "mobile" && raw.replace(/\D/g, "").length !== 10) throw new Error("should be a full 10-digit number");
       if (type === "date") data[k] = fromIso(raw);
-      else if (NUMBER_FIELDS.has(k)) data[k] = k === "mobile" && !/^\d+$/.test(raw.replace(/\s/g, "")) ? raw : parseNumber(raw);
+      else if (NUMBER_FIELDS.has(k)) data[k] = parseNumber(raw);
       else if (k === "platform") data[k] = platMap[raw.toUpperCase()] || raw;
       else if (k === "address") data[k] = addrMap[raw.toUpperCase()] || raw;
       else data[k] = raw;
     } catch (e) { problems.push(`${label}: ${e.message}`); }
   }
+  const rupay = /rupay/i.test(data.platform || "");
+  const st = String(data.status || "").toLowerCase();
+  if (!rupay && !data.model) problems.push("Model is empty");
+  if (!rupay && ["out for delivery", "delivered"].includes(st) && !data.name) problems.push("Parcel name is empty (needed once it's out for delivery)");
+  if (data.amount !== undefined && data.return === undefined && data.commission !== undefined) data.return = data.amount + data.commission;
+  if (data.amount !== undefined && data.commission === undefined && data.return !== undefined) data.commission = data.return - data.amount;
   return { data, problems };
+}
+
+function writeOrderRow(sh, d, row, styleRow) {
+  for (const [f, col] of Object.entries(ORDER_COLS)) sh.set(row, col, f in d ? d[f] : null, styleRow);
+  if (DEALERS[sh.key].commissionInput) { sh.set(row, COMMISSION_COL, d.commission ?? null, styleRow); sh.set(row, RETURN_COL, `=N${row}+O${row}`, styleRow); }
+  else { sh.set(row, RETURN_COL, d.return ?? null, styleRow); sh.set(row, COMMISSION_COL, `=SUM(R${row}-N${row})`, styleRow); }
+  sh.set(row, HAVE_COL, "commission_cut" in d ? `=SUM(N${row}+S${row})` : null, styleRow);
+}
+
+/* Delivered -> add "Amount + Commission cut" to the client whose card paid */
+function addClientTxn(S, dealerKey, row) {
+  const sh = S[dealerKey], paidBy = String(sh.value(row, ORDER_COLS.paid_by) || "").trim();
+  if (!paidBy || OWNERS.includes(normName(paidBy))) return null;
+  const blocks = parseClients(S.clients), b = blocks.find(x => normName(x.name) === normName(paidBy));
+  const amt = (num(sh.value(row, ORDER_COLS.amount)) || 0) + (num(sh.value(row, ORDER_COLS.commission_cut)) || 0);
+  if (!b) return { ok: false, text: `${paidBy} isn't in Payment Details yet, so ₹${amt} wasn't added. Add them on the Clients Payments tab.` };
+  if (b.legacy || !b.odCol) return { ok: false, text: `Payment Details needs the one-time upgrade (Clients Payments tab) before amounts can be added for ${paidBy}.` };
+  const cl = S.clients, last = cl.lastRow([b.odCol, b.amtCol]), r = last + 1, style = last >= FIRST_DATA_ROW ? last : 0;
+  cl.set(r, b.odCol, sh.date(row, ORDER_COLS.date) || today(), style);
+  cl.set(r, b.amtCol, amt, style);
+  return { ok: true, text: `₹${amt.toLocaleString("en-IN")} added to ${b.name}'s payments (row ${r}).` };
 }
 
 function askDuplicate(t, hits) {
   return new Promise(res => {
     $("dupText").innerHTML = `<p>Tracking <b>${esc(t)}</b> is already in the sheet:</p><ul>` +
       hits.map(h => `<li>Row ${h.row}: ${esc(h.name || "")}, order date ${fmtDate(h.date) || "-"}, status ${esc(h.status || "-")}</li>`).join("") +
-      `</ul><p>If this parcel went out for delivery before but wasn't delivered, press <b>Yes</b> to replace the earlier entry with this one (row ${hits[hits.length - 1].row}). Payment columns on that row are not touched.</p>
-      <p class="hint">If it's a different item in the same shipment, choose <b>Add as a new row</b>.</p>`;
+      `</ul><p>If this parcel went out before but wasn't delivered, press <b>Yes</b> to replace the earlier entry (row ${hits[hits.length - 1].row}).</p><p class="hint">If it's a different item in the same shipment, choose <b>Add as a new row</b>.</p>`;
     const dlg = $("dlgDup");
     const onClick = e => { const v = e.target.dataset.v; if (!v) return; dlg.removeEventListener("click", onClick); dlg.close(); res(v); };
-    dlg.addEventListener("click", onClick);
-    dlg.addEventListener("cancel", () => res("cancel"), { once: true });
+    dlg.addEventListener("click", onClick); dlg.addEventListener("cancel", () => res("cancel"), { once: true });
     dlg.showModal();
   });
 }
 
-$("btnAddOrder").addEventListener("click", async () => {
-  const { data, problems } = readForm(ORDER_FIELDS, "o.");
+$("btnSaveOrder").addEventListener("click", async () => {
+  const { data, problems } = readOrderForm();
   if (problems.length) { note("orderNote", "err", problems.map(esc).join("<br>")); return; }
-  $("btnAddOrder").disabled = true;
+  $("btnSaveOrder").disabled = true;
+  const updating = editRow;
   try {
-    const res = await withSheet(async sh => {
-      let replaceRow = null;
-      if (data.tracking) {
-        const t = String(data.tracking).toUpperCase();
-        const hits = sh.findTracking(t).map(row => ({ row, name: sh.value(row, ORDER_COLS.name), date: serialToDate(sh.value(row, ORDER_COLS.date)), status: sh.value(row, ORDER_COLS.status) }));
-        if (hits.length) {
-          const choice = await askDuplicate(t, hits);
-          if (choice === "cancel") return { cancelled: true };
-          if (choice === "replace") replaceRow = hits[hits.length - 1].row;
+    const res = await withData(async S => {
+      const sh = S[dealer];
+      let row, styleRow, prevStatus = "";
+      if (updating) {
+        row = updating; styleRow = 0; prevStatus = String(sh.value(row, ORDER_COLS.status) || "");
+        if (normModel(sh.value(row, ORDER_COLS.model)) !== normModel(editOrig.model) || normName(sh.value(row, ORDER_COLS.card)) !== normName(editOrig.card))
+          throw new Error(`Row ${row} was changed since you opened it. Clear the form and open it again.`);
+        if (data.tracking) {
+          const pkg = new Set([row, ...ticked]);
+          const others = sh.findTracking(data.tracking).filter(x => !pkg.has(x));
+          if (others.length && !confirm(`Tracking ${data.tracking} is also on row ${others.join(", ")}. Save anyway?`)) return { save: false, cancelled: true };
         }
+      } else {
+        if (data.tracking) {
+          const hits = sh.findTracking(data.tracking).map(r => ({ row: r, name: sh.value(r, ORDER_COLS.name), date: sh.date(r, ORDER_COLS.date), status: sh.value(r, ORDER_COLS.status) }));
+          if (hits.length) {
+            const choice = await askDuplicate(data.tracking, hits);
+            if (choice === "cancel") return { save: false, cancelled: true };
+            if (choice === "replace") { row = hits[hits.length - 1].row; prevStatus = String(hits[hits.length - 1].status || ""); }
+          }
+        }
+        if (!row) { row = sh.lastRow(KEY_COLS) + 1; styleRow = row - 1; }
       }
-      const row = writeOrder(sh, data, replaceRow);
-      return { save: true, row, replaced: !!replaceRow };
+      data.qty = 1;
+      writeOrderRow(sh, data, row, styleRow);
+      const delivered = String(data.status || "").toLowerCase() === "delivered";
+      const clients = [];
+      if (delivered && prevStatus.toLowerCase() !== "delivered") clients.push(addClientTxn(S, dealer, row));
+      // other rows in the same package: same delivery details, each keeps its own card and amount
+      const extra = updating ? [...ticked].sort((a, b) => a - b) : [];
+      for (const n of extra) {
+        const before = String(sh.value(n, ORDER_COLS.status) || "");
+        for (const f of ["name", "mobile", "address", "tracking", "status", "delivery_date"]) if (f in data) sh.set(n, ORDER_COLS[f], data[f]);
+        sh.set(n, ORDER_COLS.qty, 1);
+        if (delivered && before.toLowerCase() !== "delivered") clients.push(addClientTxn(S, dealer, n));
+      }
+      return { row, extra, clients: clients.filter(Boolean) };
     });
-    if (res.cancelled) { note("orderNote", "warn", "Nothing was added."); return; }
+    if (res.cancelled) { note("orderNote", "warn", "Nothing was saved."); return; }
     remember("o.", data); refreshDatalists();
-    note("orderNote", "ok", `✔ ${res.replaced ? "Replaced" : "Added"} row ${res.row}: ${esc(data.name)}, ${esc(data.model)}. Saved to ${esc(res.where)}.`);
-    $("pasteBox").value = ""; resetOrderForm();
+    const rowsTxt = res.extra && res.extra.length ? `rows ${[res.row, ...res.extra].join(", ")}` : `row ${res.row}`;
+    note("orderNote", "ok", `✔ ${updating ? "Updated" : "Saved"} ${rowsTxt} in ${esc(DEALERS[dealer].name)}'s sheet: ${esc(data.model || data.platform)}, ${esc(data.status || "")}.` +
+      (res.clients || []).map(c => `<br>${c.ok ? "✔" : "⚠"} ${esc(c.text)}`).join(""));
+    resetOrderForm(); renderIncomplete();
   } catch (e) { note("orderNote", "err", esc(e.message)); }
-  finally { $("btnAddOrder").disabled = false; }
+  finally { $("btnSaveOrder").disabled = false; }
 });
-$("btnClearOrder").addEventListener("click", () => { $("pasteBox").value = ""; resetOrderForm(); note("orderNote"); });
+$("btnClearOrder").addEventListener("click", () => { resetOrderForm(); note("orderNote"); renderIncomplete(); });
 
+/* ======================= out for delivery tab ======================= */
+function ofdGroups(D) {
+  const groups = [], byT = {};
+  for (const o of D.ofd) {
+    const t = String(o.tracking || "").trim().toUpperCase();
+    if (t && byT[t]) { byT[t].rows.push(o); continue; }
+    const g = { tracking: o.tracking || "", rows: [o] }; groups.push(g); if (t) byT[t] = g;
+  }
+  return groups;
+}
+function renderOfd() {
+  const D = L.dealers[dealer];
+  $("ofdCount").textContent = D ? ofdGroups(D).length : 0;
+  if (!connected || !D) return;
+  if (!D.ofd.length) { $("ofdList").innerHTML = `<div class="empty">Nothing is out for delivery right now.</div>`; return; }
+  $("ofdList").innerHTML = `<div class="scroll"><table class="list"><tr><th>Row</th><th class="opt">Order date</th><th>Parcel</th><th>Model</th><th class="opt">Paid by</th><th class="opt">Tracking</th><th>Delivered on</th><th></th></tr>` +
+    ofdGroups(D).map((g, i) => { const o = g.rows[0], many = g.rows.length > 1;
+      return `<tr><td>${g.rows.map(r => r.row).join(", ")}</td><td class="opt">${fmtDate(o.dateObj)}</td><td>${esc(o.name || "")}${many ? `<br><b>📦 ${g.rows.length} phones</b>` : ""}</td>
+      <td>${esc([...new Set(g.rows.map(r => r.model || ""))].join(", "))}</td><td class="opt">${esc(g.rows.map(r => r.paid_by || "").join(", "))}</td><td class="opt">${esc(g.tracking)}</td>
+      <td><input type="date" value="${isoDate(today())}" id="dd-${i}"></td><td><button class="btn small" data-g="${i}" data-rows="${g.rows.map(r => r.row).join(",")}" data-tracking="${esc(g.tracking)}">${many ? `Delivered (${g.rows.length})` : "Delivered"}</button></td></tr>`; }).join("") + `</table></div>`;
+}
+$("ofdList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-rows]"); if (!b) return;
+  const rows = b.dataset.rows.split(",").map(Number), tracking = b.dataset.tracking, day = $("dd-" + b.dataset.g).value;
+  b.disabled = true;
+  try {
+    const res = await withData(S => {
+      const sh = S[dealer], done = [], clients = [];
+      for (const r of rows) {
+        if (String(sh.value(r, ORDER_COLS.tracking) || "").trim().toUpperCase() !== tracking.trim().toUpperCase()) throw new Error(`Row ${r} changed since the list was shown. Nothing was saved; refresh and try again.`);
+        if (String(sh.value(r, ORDER_COLS.status) || "").toLowerCase() === "delivered") continue;
+        sh.set(r, ORDER_COLS.status, DELIVERED);
+        sh.set(r, ORDER_COLS.delivery_date, day ? fromIso(day) : today());
+        done.push(r);
+        const c = addClientTxn(S, dealer, r); if (c) clients.push(c);
+      }
+      if (!done.length) throw new Error("These rows are already Delivered.");
+      return { done, clients };
+    });
+    note("ofdNote", "ok", `✔ Row${res.done.length > 1 ? "s" : ""} ${res.done.join(", ")} marked Delivered.` + res.clients.map(c => `<br>${c.ok ? "✔" : "⚠"} ${esc(c.text)}`).join(""));
+  } catch (err) { note("ofdNote", "err", esc(err.message)); b.disabled = false; }
+});
+
+/* ======================= dealer payments + profit ======================= */
+function renderMoney() {
+  const D = L.dealers[dealer]; if (!D) return;
+  const { toGet, got, due, pending } = D.money;
+  $("dueLbl").textContent = `Payment Still Due From ${DEALERS[dealer].name}`;
+  $("dueAmt").textContent = inr(due); $("dueAmt").classList.toggle("neg", due < 0);
+  const all = Object.values(L.dealers).reduce((s, d) => s + d.money.due, 0);
+  $("dueSub").textContent = `Delivered orders ${inr(toGet)} − received ${inr(got)} (after last year's due). All dealers together: ${inr(all)}.` +
+    (pending ? ` Not counted yet: ${inr(pending)} for orders that aren't delivered.` : "");
+  $("profitTitle").textContent = `Month-Wise Profit · ${DEALERS[dealer].name}`;
+  const months = D.months, keys = Object.keys(months).sort().reverse();
+  if (!keys.length) { $("profitBox").innerHTML = `<div class="empty">No orders with amounts yet.</div>`; return; }
+  const net = m => m.com + m.cb + m.bx - m.cut;
+  const sum = ms => ms.reduce((t, m) => { for (const f of ["orders", "com", "cb", "bx", "cut"]) t[f] += m[f]; return t; }, { orders: 0, com: 0, cb: 0, bx: 0, cut: 0 });
+  const tot = sum(keys.map(k => months[k]));
+  const allNet = net(sum(Object.values(L.dealers).flatMap(d => Object.values(d.months))));
+  const max = Math.max(...keys.map(k => Math.abs(net(months[k]))), 1);
+  const thisMonth = isoDate(today()).slice(0, 7), cur = months[thisMonth];
+  const label = k => new Date(+k.slice(0, 4), +k.slice(5) - 1, 1).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  $("profitBox").innerHTML = `<div class="kpis">
+      <div class="kpi net"><div class="lbl">Net profit, ${label(thisMonth)}</div><div class="val">${inr(cur ? net(cur) : 0)}</div></div>
+      <div class="kpi net"><div class="lbl">Net profit, all months</div><div class="val">${inr(net(tot))}</div></div>
+      <div class="kpi"><div class="lbl">Commission cut, all months</div><div class="val">${inr(tot.cut)}</div></div>
+      <div class="kpi net"><div class="lbl">All dealers, net profit</div><div class="val">${inr(allNet)}</div></div>
+    </div>
+    <div class="scroll"><table class="list"><tr><th>Month</th><th class="num">Orders</th><th class="num">Commission</th><th class="num opt">Cashback</th><th class="num opt">Bulk extra</th><th class="num">Comm. cut</th><th class="num">Net profit</th><th class="opt" style="width:20%"></th></tr>` +
+    keys.map(k => { const m = months[k], n = net(m);
+      return `<tr><td>${label(k)}</td><td class="num">${m.orders}</td><td class="num">${inr(m.com)}</td><td class="num opt">${inr(m.cb)}</td><td class="num opt">${inr(m.bx)}</td><td class="num">${inr(m.cut)}</td><td class="num ${n < 0 ? "neg" : ""}"><b>${inr(n)}</b></td><td class="opt"><div class="bar" style="width:${Math.abs(n) / max * 100}%;${n < 0 ? "background:var(--err)" : ""}"></div></td></tr>`; }).join("") +
+    `<tr class="total"><td>Total</td><td class="num">${tot.orders}</td><td class="num">${inr(tot.com)}</td><td class="num opt">${inr(tot.cb)}</td><td class="num opt">${inr(tot.bx)}</td><td class="num">${inr(tot.cut)}</td><td class="num">${inr(net(tot))}</td><td class="opt"></td></tr></table></div>`;
+}
+function resetPayForm() { for (const [k] of PAY_FIELDS) field("p.", k).value = ""; field("p.", "date").value = isoDate(today()); }
 $("btnAddPay").addEventListener("click", async () => {
-  const { data, problems } = readForm(PAY_FIELDS, "p.");
+  const data = {}, problems = [];
+  for (const [k, label, type] of PAY_FIELDS) {
+    const raw = field("p.", k).value.trim();
+    if (!raw) { problems.push(`${label} is empty`); continue; }
+    try { data[k] = type === "date" ? fromIso(raw) : k === "amount" ? parseNumber(raw) : raw; } catch (e) { problems.push(`${label}: ${e.message}`); }
+  }
   if (problems.length) { note("payNote", "err", problems.map(esc).join("<br>")); return; }
   $("btnAddPay").disabled = true;
   try {
-    const res = await withSheet(sh => ({ save: true, row: writePayment(sh, data) }));
+    const res = await withData(S => {
+      const sh = S[dealer], last = sh.lastRow(Object.values(PAYMENT_COLS)), row = last + 1;
+      for (const [f, col] of Object.entries(PAYMENT_COLS)) sh.set(row, col, data[f], last >= FIRST_DATA_ROW ? last : 0);
+      return { row };
+    });
     remember("p.", data); refreshDatalists();
-    note("payNote", "ok", `✔ Added in row ${res.row}: ${esc(data.sender)} → ${esc(data.bank)}, ₹${data.amount}. Saved to ${esc(res.where)}.`);
+    note("payNote", "ok", `✔ Added in row ${res.row}: ${esc(data.sender)} → ${esc(data.bank)}, ${inr(data.amount)}.`);
     resetPayForm();
   } catch (e) { note("payNote", "err", esc(e.message)); }
   finally { $("btnAddPay").disabled = false; }
 });
 $("btnClearPay").addEventListener("click", () => { resetPayForm(); note("payNote"); });
 
-/* ======================= due amount + profit tab ======================= */
-const inr = n => (n < 0 ? "−₹" : "₹") + Math.abs(Math.round(n)).toLocaleString("en-IN");
-function renderMoney() {
-  if (!learned.money) return;
-  const { toGet, got, due } = learned.money;
-  $("dueAmt").textContent = inr(due);
-  $("dueAmt").classList.toggle("neg", due < 0);
-  $("dueSub").textContent = `Total to get ${inr(toGet)} (Amount + Commission) − received so far ${inr(got)} (after last year's due)`;
-  const keys = Object.keys(learned.months).sort().reverse();
-  if (!keys.length) { $("profitBox").innerHTML = `<div class="empty">No orders with amounts yet.</div>`; return; }
-  const net = m => m.com + m.cb + m.bx - m.cut;
-  const tot = keys.reduce((t, k) => { const m = learned.months[k]; for (const f of ["orders", "com", "cb", "bx", "cut"]) t[f] += m[f]; return t; }, { orders: 0, com: 0, cb: 0, bx: 0, cut: 0 });
-  const max = Math.max(...keys.map(k => Math.abs(net(learned.months[k]))), 1);
-  const thisMonth = isoDate(today()).slice(0, 7), cur = learned.months[thisMonth];
-  const label = k => new Date(+k.slice(0, 4), +k.slice(5) - 1, 1).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
-  $("profitBox").innerHTML = `<div class="kpis">
-      <div class="kpi net"><div class="lbl">Net profit, ${label(thisMonth)}</div><div class="val">${inr(cur ? net(cur) : 0)}</div></div>
-      <div class="kpi net"><div class="lbl">Net profit, all months</div><div class="val">${inr(net(tot))}</div></div>
-      <div class="kpi"><div class="lbl">Total profit (before cut)</div><div class="val">${inr(tot.com + tot.cb + tot.bx)}</div></div>
-      <div class="kpi"><div class="lbl">Total commission cut</div><div class="val">${inr(tot.cut)}</div></div>
-    </div>
-    <div class="scroll"><table class="list"><tr><th>Month</th><th class="num">Orders</th><th class="num">Commission</th><th class="num opt">Cashback</th><th class="num opt">Bulk extra</th><th class="num">Comm. cut</th><th class="num">Net profit</th><th class="opt" style="width:22%"></th></tr>` +
-    keys.map(k => { const m = learned.months[k], n = net(m);
-      return `<tr><td>${label(k)}</td><td class="num">${m.orders}</td><td class="num">${inr(m.com)}</td><td class="num opt">${inr(m.cb)}</td><td class="num opt">${inr(m.bx)}</td><td class="num">${inr(m.cut)}</td><td class="num ${n < 0 ? "neg" : ""}"><b>${inr(n)}</b></td><td class="opt"><div class="bar" style="width:${Math.abs(n) / max * 100}%;${n < 0 ? "background:var(--err)" : ""}"></div></td></tr>`; }).join("") +
-    `<tr class="total"><td>Total</td><td class="num">${tot.orders}</td><td class="num">${inr(tot.com)}</td><td class="num opt">${inr(tot.cb)}</td><td class="num opt">${inr(tot.bx)}</td><td class="num">${inr(tot.cut)}</td><td class="num">${inr(net(tot))}</td><td class="opt"></td></tr></table></div>`;
-}
-
-/* ======================= out for delivery tab ======================= */
-function renderOfd() {
-  $("ofdCount").textContent = learned.ofd.length;
+/* ======================= clients tab ======================= */
+function renderClients() {
   if (!connected) return;
-  if (!learned.ofd.length) { $("ofdList").innerHTML = `<div class="empty">Nothing is out for delivery right now.</div>`; return; }
-  $("ofdList").innerHTML = `<table class="list"><tr><th>Row</th><th>Order date</th><th>Parcel name</th><th>Model</th><th>Qty</th><th>Tracking</th><th>Delivered on</th><th></th></tr>` +
-    learned.ofd.map(o => `<tr><td>${o.row}</td><td>${fmtDate(o.date) || ""}</td><td>${esc(o.name || "")}</td><td>${esc(o.model || "")}</td><td>${esc(o.qty || "")}</td><td>${esc(o.tracking || "")}</td>
-      <td><input type="date" value="${isoDate(today())}" id="dd-${o.row}"></td>
-      <td><button class="btn small" data-row="${o.row}" data-tracking="${esc(o.tracking || "")}">Delivered</button></td></tr>`).join("") + `</table>`;
+  const C = L.clients;
+  $("migrateBox").innerHTML = L.clientsLegacy ? `<div class="panel" style="border:2px solid #fb8c00"><h2>One-Time Upgrade Of Payment Details</h2>
+    <p class="hint">Adds an <b>Order Date</b> column before each client's payments and renames <b>Payments</b> to <b>Transaction Amount</b>. Existing amounts get their order date filled in where it can be matched to an order.</p>
+    <button class="btn warn" id="btnMigrate">Upgrade the sheet</button><div id="migNote"></div></div>` : "";
+  if ($("btnMigrate")) $("btnMigrate").onclick = migrateClients;
+  const total = C.reduce((s, b) => s + b.left, 0);
+  $("clientsLeft").textContent = inr(C.reduce((s, b) => s + Math.max(0, b.left), 0));
+  const adv = C.reduce((s, b) => s + Math.max(0, -b.left), 0);
+  $("clientsSub").textContent = `${C.filter(b => Math.round(b.left) > 0).length} of ${C.length} clients still have money to get.` + (adv ? ` You will get back ${inr(adv)} from clients you gave extra (net ${inr(total)}).` : "");
+  $("clientCards").innerHTML = C.map((b, i) => {
+    const zero = Math.round(b.left) === 0, extra = Math.round(b.left) < 0;
+    const rows = b.entries.map(e => `<tr><td>${fmtDate(e.od)}</td><td class="num">${e.amt !== null ? inr(e.amt) : ""}</td><td class="num">${e.given !== null ? inr(e.given) : ""}</td><td>${esc(fmtDate(e.gdate))}</td></tr>`).join("");
+    return `<div class="ccard ${zero ? "zero" : extra ? "extra" : ""}">
+      <h3>${esc(b.name)}</h3>
+      <div class="left">${inr(b.left)}</div>
+      <div class="meta">${extra ? "you will get this back" : "left to give"} · owed ${inr(b.owed)} · given ${inr(b.given)} · ${b.entries.filter(e => e.amt !== null).length} transactions</div>
+      <div class="btns" style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn small" data-pay="${i}">Pay</button>
+        <button class="btn small ghost" data-stmt="${i}">Share statement</button>
+        <button class="btn small ${zero ? "" : "ghost"}" data-settle="${i}" ${b.entries.length ? "" : "disabled"}>Mark settled</button>
+      </div>
+      ${b.entries.length ? `<details><summary>Details</summary><table class="list"><tr><th>Order date</th><th class="num">Transaction</th><th class="num">Given</th><th>Date</th></tr>${rows}</table></details>` : ""}
+    </div>`; }).join("") || `<div class="empty">No clients found in Payment Details.</div>`;
 }
-$("ofdList").addEventListener("click", async e => {
-  const b = e.target.closest("button[data-row]"); if (!b) return;
-  const row = +b.dataset.row, tracking = b.dataset.tracking, day = $("dd-" + row).value;
-  b.disabled = true;
-  try {
-    const res = await withSheet(sh => {
-      let r = row;
-      const cur = sh.value(r, ORDER_COLS.tracking);
-      if (String(cur || "").trim().toUpperCase() !== tracking.trim().toUpperCase()) {   // sheet changed since the list was drawn
-        const hits = sh.findTracking(tracking).filter(n => String(sh.value(n, ORDER_COLS.status) || "").toLowerCase() === OFD.toLowerCase());
-        if (hits.length !== 1) throw new Error(`Couldn't find tracking ${tracking} any more. Nothing changed.`);
-        r = hits[0];
-      }
-      updateRow(sh, r, { status: DELIVERED, delivery_date: day ? fromIso(day) : today() });
-      return { save: true, row: r };
-    });
-    note("ofdNote", "ok", `✔ Row ${res.row} marked Delivered. Saved to ${esc(res.where)}.`);
-  } catch (err) { note("ofdNote", "err", esc(err.message)); b.disabled = false; }
+$("clientCards").addEventListener("click", e => {
+  const t = e.target;
+  if (t.dataset.pay) openPay(+t.dataset.pay);
+  if (t.dataset.stmt) shareStatement(L.clients[+t.dataset.stmt]);
+  if (t.dataset.settle) settleClient(+t.dataset.settle);
 });
 
-/* ======================= tabs ======================= */
+let payIdx = null;
+function openPay(i) {
+  payIdx = i; const b = L.clients[i];
+  $("pcTitle").textContent = `Pay ${b.name}`;
+  $("pcAmount").value = b.left > 0 ? Math.round(b.left) : ""; $("pcDate").value = isoDate(today());
+  document.querySelector('input[name=pcMethod][value=paid]').checked = true; $("pcDealerBox").style.display = "none";
+  $("pcDealer").innerHTML = Object.entries(DEALERS).map(([k, d]) => `<option value="${k}">${esc(d.name)}</option>`).join("");
+  $("pcNote").innerHTML = ""; $("dlgPayClient").showModal();
+}
+document.querySelectorAll("input[name=pcMethod]").forEach(r => r.addEventListener("change", () => { $("pcDealerBox").style.display = r.value === "cut" && r.checked ? "block" : "none"; }));
+$("pcSave").addEventListener("click", async () => {
+  const b = L.clients[payIdx]; let amount;
+  try { amount = parseNumber($("pcAmount").value); } catch (e) { note("pcNote", "err", "Enter the amount given."); return; }
+  const method = document.querySelector("input[name=pcMethod]:checked").value;
+  const dateVal = method === "cut" ? `${DEALERS[$("pcDealer").value].name.split(" ")[0]} Cut` : ($("pcDate").value ? fromIso($("pcDate").value) : today());
+  $("pcSave").disabled = true;
+  try {
+    await withData(S => {
+      const blk = parseClients(S.clients).find(x => normName(x.name) === normName(b.name));
+      if (!blk) throw new Error(`${b.name} isn't in Payment Details any more.`);
+      const cl = S.clients, last = cl.lastRow([blk.givenCol, blk.dateCol]), r = last + 1;
+      cl.set(r, blk.givenCol, amount, last >= FIRST_DATA_ROW ? last : 0);
+      cl.set(r, blk.dateCol, dateVal, last >= FIRST_DATA_ROW ? last : 0);
+    });
+    $("dlgPayClient").close();
+    note("clientNote", "ok", `✔ Recorded ${inr(amount)} given to ${esc(b.name)}${method === "cut" ? ` (${esc(dateVal)})` : ""}.`);
+  } catch (e) { note("pcNote", "err", esc(e.message)); }
+  finally { $("pcSave").disabled = false; }
+});
+
+async function settleClient(i) {
+  const b = L.clients[i];
+  if (Math.round(b.left) !== 0 && !confirm(`${b.name} still has ${inr(b.left)} left. Settle and archive anyway?`)) return;
+  if (!confirm(`Move ${b.name}'s ${b.entries.length} rows to "Settled history" and clear them from Payment Details?\n\nDo this after the client has confirmed your statement.`)) return;
+  try {
+    await withData(S => {
+      const blk = parseClients(S.clients).find(x => normName(x.name) === normName(b.name));
+      if (!blk) throw new Error(`${b.name} isn't in Payment Details any more.`);
+      const H = S.history, settled = today();
+      let hr = Math.max(1, H.lastRow([1, 2, 3, 4, 5, 6], 2));
+      for (const e of blk.entries) {
+        hr++;
+        H.set(hr, 1, settled); H.set(hr, 2, blk.name);
+        if (e.od) H.set(hr, 3, e.od);
+        if (e.amt !== null) H.set(hr, 4, e.amt);
+        if (e.given !== null) H.set(hr, 5, e.given);
+        if (e.gdate) H.set(hr, 6, e.gdate instanceof Date ? e.gdate : String(e.gdate));
+        for (const c of [blk.odCol, blk.amtCol, blk.givenCol, blk.dateCol]) if (c && S.clients.raw(e.row, c) !== "") S.clients.set(e.row, c, null);
+      }
+    });
+    note("clientNote", "ok", `✔ ${esc(b.name)} settled. Their rows are saved in the "Settled history" tab of Payment Details.`);
+  } catch (e) { note("clientNote", "err", esc(e.message)); }
+}
+
+/* statement image for WhatsApp */
+async function shareStatement(b) {
+  const tx = b.entries.filter(e => e.amt !== null), gv = b.entries.filter(e => e.given !== null);
+  const W = 1080, lineH = 54, H = 420 + (tx.length + gv.length) * lineH + 260;
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  g.fillStyle = "#075e54"; g.fillRect(0, 0, W, 170);
+  g.fillStyle = "#fff"; g.font = "800 60px system-ui, sans-serif"; g.fillText("Digital Den", 60, 95);
+  g.font = "500 34px system-ui, sans-serif"; g.fillText(`Statement for ${b.name} · ${fmtDate(today())}`, 60, 145);
+  let y = 240; const line = (l, r, bold, color = "#15201e") => { g.fillStyle = color; g.font = `${bold ? 800 : 500} 36px system-ui, sans-serif`; g.fillText(l, 60, y); const w = g.measureText(r).width; g.fillText(r, W - 60 - w, y); y += lineH; };
+  g.fillStyle = "#128c7e"; g.font = "800 38px system-ui, sans-serif"; g.fillText("Transactions", 60, y); y += lineH;
+  for (const e of tx) line(e.od ? fmtDate(e.od) : "-", inr(e.amt));
+  line("Total", inr(b.owed), true); y += 20;
+  g.fillStyle = "#128c7e"; g.font = "800 38px system-ui, sans-serif"; g.fillText("Given", 60, y); y += lineH;
+  for (const e of gv) line(String(fmtDate(e.gdate) || "-"), inr(e.given));
+  line("Total given", inr(b.given), true); y += 30;
+  const zero = Math.round(b.left) === 0;
+  g.fillStyle = zero ? "#e8f5e9" : "#fdecea"; g.fillRect(40, y - 20, W - 80, 130);
+  g.fillStyle = zero ? "#2e7d32" : "#c62828"; g.font = "800 44px system-ui, sans-serif"; g.fillText("Left", 70, y + 60);
+  g.font = "800 64px system-ui, sans-serif"; const lt = inr(b.left); g.fillText(lt, W - 70 - g.measureText(lt).width, y + 68);
+  const blob = await new Promise(r => c.toBlob(r, "image/png"));
+  const file = new File([blob], `${b.name.replace(/\W+/g, "_")}_statement.png`, { type: "image/png" });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: `Statement for ${b.name}` }); return; } catch (e) { if (e.name === "AbortError") return; } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  note("clientNote", "ok", `✔ Statement image downloaded for ${esc(b.name)}. Send it on WhatsApp.`);
+}
+
+/* add client block (same layout as the others) */
+$("btnAddClient").addEventListener("click", () => { $("acName").value = ""; $("acNote").innerHTML = ""; $("dlgAddClient").showModal(); });
+$("acSave").addEventListener("click", async () => {
+  const name = $("acName").value.trim(); if (!name) { note("acNote", "err", "Type the client's name."); return; }
+  if (L.clients.some(b => normName(b.name) === normName(name))) { note("acNote", "err", `${name} already exists.`); return; }
+  if (L.clientsLegacy) { note("acNote", "err", "Do the one-time upgrade on the Clients Payments tab first."); return; }
+  try {
+    await withData(S => {
+      const cl = S.clients, blocks = parseClients(cl), prev = blocks[blocks.length - 1];
+      const start = (prev ? prev.leftCol : 2) + 2, Lt = c => colLetter(start + c);
+      const od = start, amt = start + 1, tot = start + 2, given = start + 3, date = start + 4, tg = start + 5, left = start + 6;
+      if (prev) cl.op({ op: "copyFormat", from: [1, prev.odCol, Math.max(cl.maxRow(), 60), 7], to: [1, od] });
+      cl.set(1, amt, name);
+      [["Order Date", od], ["Transaction Amount", amt], ["Total", tot], ["Given", given], ["Date", date], ["Total Given", tg], ["Left", left]].forEach(([h, c]) => cl.set(2, c, h));
+      cl.set(3, tot, `=SUM(${Lt(1)}3:${Lt(1)}1997)`);
+      cl.set(3, tg, `=SUM(${Lt(3)}3:${Lt(3)}1997)`);
+      cl.set(3, left, `=SUM(${Lt(2)}3-${Lt(5)}3)`);
+      cl.set(2, 1, `=SUM(${[...blocks.map(b => colLetter(b.leftCol)), colLetter(left)].map(c => c + "3").join(",")})`);
+    });
+    $("dlgAddClient").close();
+    note("clientNote", "ok", `✔ ${esc(name)} added to Payment Details.`);
+  } catch (e) { note("acNote", "err", esc(e.message)); }
+});
+
+/* one-time upgrade: Order Date column + "Transaction Amount" + backfilled dates */
+async function migrateClients() {
+  $("btnMigrate").disabled = true; note("migNote", "info", "Upgrading… (step 1 of 2)");
+  try {
+    await withData(S => {
+      const legacy = parseClients(S.clients).filter(b => b.legacy);
+      S.clients.op({ op: "insertCols", cols: legacy.map(b => b.amtCol) });
+      return {};
+    });
+    note("migNote", "info", "Upgrading… (step 2 of 2)");
+    const res = await withData(S => {
+      const cl = S.clients; let filled = 0, missing = 0;
+      // pool of client orders across dealers: value = Amount + Commission cut
+      const pool = [];
+      for (const k of Object.keys(DEALERS)) {
+        const sh = S[k]; if (!sh) continue;
+        for (const n of sh.rows.keys()) if (n >= FIRST_DATA_ROW && hasKey(sh, n)) {
+          const pb = normName(sh.value(n, ORDER_COLS.paid_by)); if (!pb) continue;
+          pool.push({ pb, value: (num(sh.value(n, ORDER_COLS.amount)) || 0) + (num(sh.value(n, ORDER_COLS.commission_cut)) || 0), date: sh.date(n, ORDER_COLS.date), used: false });
+        }
+      }
+      pool.sort((a, b) => (b.date || 0) - (a.date || 0));
+      for (let c = 1; c <= cl.maxCol(); c++) {
+        if (normKey(cl.value(2, c) || "") !== "payments") continue;
+        const odCol = c - 1;
+        cl.set(2, odCol, "Order Date"); cl.set(2, c, "Transaction Amount");
+        cl.op({ op: "copyFormat", from: [2, c, 1, 1], to: [2, odCol] });
+        const name = normName(cl.value(1, c));
+        const last = cl.lastRow([c]);
+        for (let n = FIRST_DATA_ROW; n <= last; n++) {
+          const v = num(cl.value(n, c)); if (v === null) continue;
+          const hit = pool.find(p => !p.used && p.pb === name && Math.abs(p.value - v) < 0.5 && p.date);
+          if (hit) { hit.used = true; cl.set(n, odCol, hit.date); filled++; } else missing++;
+        }
+      }
+      return { filled, missing };
+    });
+    note("clientNote", "ok", `✔ Payment Details upgraded. Order dates filled for ${res.filled} amounts${res.missing ? `; ${res.missing} older amounts had no matching order and are left blank` : ""}.`);
+  } catch (e) { note("clientNote", "err", esc(e.message)); if ($("btnMigrate")) $("btnMigrate").disabled = false; }
+}
+
+/* ======================= tracking search ======================= */
+const TRACK_FIELDS = [["date", "Order Date"], ["by", "Order Placed By"], ["platform", "Platform"], ["model", "Model"], ["qty", "Quantity"], ["card", "Card Details"],
+  ["paid_by", "Amount Paid By"], ["amount", "Amount"], ["return", "Return Amount"], ["commission", "Commission"], ["commission_cut", "Commission Cut"],
+  ["status", "Delivery Status"], ["delivery_date", "Delivery Date"], ["name", "Parcel Name"], ["mobile", "Mobile No"], ["address", "Address"], ["tracking", "Tracking ID"]];
+async function searchTracking() {
+  const q = $("trackQ").value.trim().toUpperCase().replace(/\s+/g, "");
+  if (q.length < 4) { note("trackOut", "warn", "Type at least 4 characters of the tracking ID."); return; }
+  note("trackOut", "info", "Searching…");
+  try { await withData(() => ({ save: false })); } catch (e) { note("trackOut", "err", esc(e.message)); return; }
+  const hits = [];
+  for (const [k, D] of Object.entries(L.dealers)) for (const r of Object.values(D.rows))
+    if (r.tracking && r.tracking.toUpperCase().replace(/\s+/g, "").includes(q)) hits.push({ dealer: k, r });
+  if (!hits.length) { note("trackOut", "warn", `No row has a tracking ID containing <b>${esc(q)}</b>.`); return; }
+  const ids = new Set(hits.map(h => h.r.tracking.trim().toUpperCase()));
+  const dup = hits.length > 1;
+  $("trackOut").innerHTML = (dup ? `<div class="note warn">Found on <b>${hits.length} rows</b>${ids.size === 1 ? " with the same tracking ID (same package or a duplicate entry)" : ` across ${ids.size} tracking IDs`}.</div>` : `<div class="note ok">Found 1 row.</div>`) +
+    hits.map(({ dealer: k, r }) => {
+      const v = { ...r, date: fmtDate(r.dateObj), delivery_date: fmtDate(r.deliveryObj) };
+      return `<div class="panel" style="margin:10px 0;border-left:4px solid var(--mid)">
+        <h2>${esc(DEALERS[k].name)} · Row ${r.row}</h2>
+        <table class="list">${TRACK_FIELDS.filter(([f]) => v[f] !== null && v[f] !== undefined && v[f] !== "").map(([f, lab]) => `<tr><td style="color:#5b6866;width:38%">${lab}</td><td><b>${esc(v[f])}</b></td></tr>`).join("")}</table>
+      </div>`; }).join("");
+}
+$("btnTrack").addEventListener("click", searchTracking);
+$("trackQ").addEventListener("keydown", e => { if (e.key === "Enter") searchTracking(); });
+
+/* ======================= dealer picker, tabs, render ======================= */
+function renderDealerSeg() {
+  $("dealerSeg").innerHTML = Object.entries(DEALERS).map(([k, d]) => `<button data-dealer="${k}" class="${k === dealer ? "on" : ""}">${esc(d.name)}</button>`).join("");
+}
+$("dealerSeg").addEventListener("click", e => {
+  const k = e.target.dataset.dealer; if (!k || k === dealer) return;
+  dealer = k; lsSet("dealer", k); renderDealerSeg(); resetOrderForm(); note("orderNote"); renderAll();
+});
+function renderAll() { renderIncomplete(); renderOfd(); renderMoney(); renderClients(); }
 document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => {
   document.querySelectorAll("nav button").forEach(x => x.classList.toggle("active", x === b));
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.id === "tab-" + b.dataset.tab));
 }));
 
-/* ======================= chat tab (#ORDER / #PAYMENT / #UPDATE) ======================= */
-const TIME = String.raw`\d{1,2}:\d{2}(?::\d{2})?(?:[\s ]?[ap]\.?m\.?)?`;
-const DATE = String.raw`\d{1,2}\/\d{1,2}\/\d{2,4}`;
-const HEADERS = [
-  new RegExp(`^(${DATE}),?\\s+${TIME}\\s+-\\s+([^:]+):\\s?(.*)$`, "i"),
-  new RegExp(`^\\[(${DATE}),?\\s+${TIME}\\]\\s+([^:]+):\\s?(.*)$`, "i"),
-  new RegExp(`^\\[${TIME},\\s*(${DATE})\\]\\s+([^:]+):\\s?(.*)$`, "i"),
-];
-const TAG_RE = /^\s*#\s*(ORDER|PAYMENT|UPDATE)\b(.*)$/i;
-const REQUIRED = { ORDER: ["by","platform","name","model","amount","return"], PAYMENT: ["sender","bank","amount"], UPDATE: ["tracking"] };
-function splitMessages(raw) {
-  const lines = raw.replace(/[‎‏‪-‮⁦-⁩﻿]/g, "").split(/\r?\n/);
-  const msgs = []; let cur = null;
-  for (const line of lines) {
-    let hit = null; for (const re of HEADERS) { const m = line.match(re); if (m) { hit = m; break; } }
-    if (hit) { if (cur) msgs.push(cur); let d = null; try { d = parseDate(hit[1]); } catch (e) {} cur = { date: d, author: hit[2].trim(), text: hit[3] }; }
-    else if (cur) cur.text += "\n" + line; else cur = { date: null, author: "", text: line };
-  }
-  if (cur) msgs.push(cur);
-  return msgs;
+/* ======================= years ======================= */
+function latestYear() { return YEARS.length ? YEARS[YEARS.length - 1] : ""; }
+function shownYear() { return year && YEARS.includes(year) ? year : latestYear(); }
+function renderYear() {
+  $("yearSel").innerHTML = YEARS.map(y => `<option value="${y}" ${y === shownYear() ? "selected" : ""}>${y}</option>`).join("");
+  $("yearSel").style.display = YEARS.length ? "" : "none";
+  const cal = String(new Date().getFullYear()), last = latestYear(), shown = shownYear();
+  let html = "";
+  if (last && +cal > +last) html = `<div class="yearbar new">🎉 It's ${cal}. Start the ${cal} sheets? This year's LEFT carries over as "Previous Year Due". <button class="btn small" data-newyear="${cal}">Start ${cal}</button></div>`;
+  else if (shown && shown !== last) html = `<div class="yearbar old">You're looking at ${shown}. New orders go into the ${shown} sheets. <button class="btn small ghost" data-year="${last}">Go to ${last}</button></div>`;
+  if (MISSING.length) html += `<div class="yearbar old">Not found in Drive: ${esc(MISSING.join(", "))}. Check the "Digital Den" folder.</div>`;
+  document.querySelectorAll(".yearbanner").forEach(el => el.innerHTML = html);
+  if (last) $("btnNewYear").textContent = `Start ${+last + 1}`;
 }
-function parseFields(lines) {
-  const raw = {}, problems = []; let last = null;
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const i = line.indexOf(":");
-    if (i > 0) { const key = ALIASES[normKey(line.slice(0, i))]; if (key && key !== "otp" && key !== "pin") { raw[key] = line.slice(i + 1).trim(); last = key; continue; } }
-    if (last === "address") raw.address = raw.address.replace(/[,\s]+$/, "") + ", " + line.trim();
-    else problems.push(`didn't understand line "${line.trim()}"`);
-  }
-  const data = {};
-  for (const [k, v] of Object.entries(raw)) {
-    if (v === "") continue;
-    try {
-      if (DATE_FIELDS.has(k)) data[k] = parseDate(v);
-      else if (NUMBER_FIELDS.has(k)) data[k] = parseNumber(v);
-      else if (k === "address") data[k] = addrMap[v.toUpperCase()] || v;
-      else if (k === "platform") data[k] = platMap[v.toUpperCase()] || v;
-      else data[k] = v;
-    } catch (e) { problems.push(`${LABELS[k] || k}: ${e.message}`); }
-  }
-  return { data, problems };
+async function switchYear(y) {
+  year = y; lsSet("year", y); resetOrderForm(); note("orderNote");
+  $("fileStatus").textContent = `Loading ${y}…`;
+  try { await withData(() => ({ save: false })); setStatus(); } catch (e) { $("fileStatus").textContent = "Couldn't load: " + e.message; }
 }
-function splitBlocks(text) {
-  const blocks = []; let cur = null;
-  for (const line of text.split("\n")) {
-    const m = line.match(TAG_RE);
-    if (m) { if (cur) blocks.push(cur); cur = { kind: m[1].toUpperCase(), lines: m[2].trim() ? [m[2]] : [] }; }
-    else if (cur) cur.lines.push(line);
-  }
-  if (cur) blocks.push(cur);
-  return blocks;
+$("yearSel").addEventListener("change", e => switchYear(e.target.value));
+document.addEventListener("click", e => {
+  const y = e.target.dataset && e.target.dataset.year; if (y) switchYear(y);
+  const ny = e.target.dataset && e.target.dataset.newyear; if (ny) startYear(ny);
+});
+$("btnNewYear").addEventListener("click", () => startYear(String(+latestYear() + 1)));
+async function startYear(to) {
+  if (!confirm(`Create the ${to} folder with new Rahul and Sourav sheets?\n\n${latestYear()}'s LEFT will be carried over as "Previous Year Due". ${latestYear()}'s sheets are not changed.`)) return;
+  note("yearNote", "info", `Creating ${to}… this can take up to a minute.`);
+  try {
+    const j = await api({ action: "newYear", to });
+    DATA = j.data; year = j.year; lsSet("year", year); renderYear(); learn(); setStatus();
+    note("yearNote", "ok", `✔ ${to} is ready. New orders now go into the ${to} sheets.`);
+  } catch (e) { note("yearNote", "err", esc(e.message)); }
 }
-function parsePaste(raw) {
-  const out = [];
-  for (const msg of splitMessages(raw)) for (const b of splitBlocks(msg.text)) {
-    const { data, problems } = parseFields(b.lines), fb = msg.date || today();
-    if (b.kind !== "UPDATE" && !("date" in data)) data.date = fb;
-    if (b.kind === "ORDER" && !("qty" in data)) data.qty = 1;
-    if (b.kind === "UPDATE" && /^delivered$/i.test(data.status || "") && !("delivery_date" in data)) data.delivery_date = fb;
-    for (const f of REQUIRED[b.kind]) if (!(f in data)) problems.push(`${LABELS[f]} is missing`);
-    out.push({ kind: b.kind, data, problems });
-  }
-  return out;
-}
-const chat = $("chat"), chatInput = $("chatInput");
-const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-function addMsg(cls, html) { const d = document.createElement("div"); d.className = "msg " + cls; d.innerHTML = html + `<time>${now()}</time>`; chat.appendChild(d); chat.scrollTop = chat.scrollHeight; return d; }
-const TITLES = { ORDER: "NEW ORDER", PAYMENT: "PAYMENT RECEIVED", UPDATE: "STATUS UPDATE" };
-function card(it) {
-  const bad = it.problems.length > 0;
-  return `<div class="card ${bad ? "bad" : ""}"><h4>${TITLES[it.kind]}${bad ? " · WILL BE SKIPPED" : ""}</h4><table>` +
-    Object.entries(it.data).map(([k, v]) => `<tr><td>${esc(LABELS[k] || k)}</td><td>${esc(fmtDate(v))}</td></tr>`).join("") +
-    `</table>${bad ? `<ul>${it.problems.map(p => `<li>${esc(p)}</li>`).join("")}</ul>` : ""}</div>`;
-}
-function chatSend() {
-  const text = chatInput.value.trim(); if (!text) return;
-  addMsg("me", esc(text)); chatInput.value = "";
-  const items = parsePaste(text);
-  if (!items.length) { addMsg("bot", `I couldn't find any #ORDER, #PAYMENT or #UPDATE in that. For "Out for delivery" messages use the <b>New delivery</b> tab.`); return; }
-  const good = items.filter(i => !i.problems.length);
-  const m = addMsg("bot", `${items.map(card).join("")}<div class="btns">${good.length ? `<button class="btn small" data-act="add">Add ${good.length} to sheet</button>` : ""}<button class="btn small ghost" data-act="cancel">${good.length ? "Cancel" : "OK"}</button></div>`);
-  m.querySelector(".btns").addEventListener("click", async ev => {
-    const act = ev.target.dataset.act; if (!act) return;
-    const btns = m.querySelectorAll(".btns button"); btns.forEach(b => b.disabled = true);
-    if (act === "cancel") return;
-    try {
-      const res = await withSheet(sh => {
-        const results = [];
-        for (const it of good) {
-          const d = it.data;
-          if (it.kind === "ORDER") {
-            if (d.tracking && sh.findTracking(d.tracking).length) { results.push([false, `Order for ${d.name} skipped: tracking ${d.tracking} is already in the sheet. Use the New delivery tab to replace it.`]); continue; }
-            results.push([true, `Order added in row ${writeOrder(sh, d)}: ${d.name}, ${d.model}, ₹${d.amount}`]);
-          } else if (it.kind === "PAYMENT") results.push([true, `Payment added in row ${writePayment(sh, d)}: ${d.sender} → ${d.bank}, ₹${d.amount}`]);
-          else {
-            const hits = sh.findTracking(d.tracking);
-            if (hits.length !== 1) { results.push([false, `Update skipped: tracking ${d.tracking} found ${hits.length} times in the sheet.`]); continue; }
-            results.push([true, `Row ${hits[0]} updated (${d.tracking}): ${updateRow(sh, hits[0], d).join(", ")}`]);
-          }
-        }
-        for (const it of good) remember(it.kind === "PAYMENT" ? "p." : "o.", it.data);
-        return { save: results.some(r => r[0]), results };
-      });
-      addMsg("bot", res.results.map(([ok, t]) => `<div class="${ok ? "ok" : "err"}">${ok ? "✔" : "✖"} ${esc(t)}</div>`).join("") + (res.where ? `<div class="hint" style="margin:4px 0 0">Saved to ${esc(res.where)}</div>` : ""));
-    } catch (e) { addMsg("bot", `<span class="err">${esc(e.message)}</span>`); btns.forEach(b => b.disabled = false); }
-  });
-}
-chatInput.addEventListener("input", () => { chatInput.style.height = "auto"; chatInput.style.height = Math.min(chatInput.scrollHeight, innerHeight * .4) + "px"; });
-chatInput.addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); chatSend(); } });
-$("chatSend").addEventListener("click", chatSend);
-addMsg("bot", `Paste messages that start with <b>#ORDER</b>, <b>#PAYMENT</b> or <b>#UPDATE</b> here. Tap <b>Message formats</b> for templates.`);
+function setStatus() { $("fileStatus").textContent = `Connected · ${shownYear()} · ${Object.keys(DEALERS).map(k => DEALERS[k].name).join(", ")} + Payment Details`; }
 
-const TEMPLATES = {
-  "New order": "#ORDER\nBy: \nPlatform: FK\nName: \nMobile: \nModel: \nQty: 1\nAddress: \nTracking: \nCard: \nPaid By: \nAmount: \nReturn: \nCut: ",
-  "Payment received": "#PAYMENT\nSender: \nBank: \nAmount: ",
-  "Status update": "#UPDATE\nTracking: \nStatus: Delivered"
-};
-$("tplList").innerHTML = Object.entries(TEMPLATES).map(([k, v], i) => `<div class="tplrow"><b>${k}</b><button class="btn small" data-copy="${i}">Copy</button></div><pre>${esc(v)}</pre>`).join("");
-$("tplList").addEventListener("click", async e => {
-  const i = e.target.dataset.copy; if (i === undefined) return;
-  try { await navigator.clipboard.writeText(Object.values(TEMPLATES)[i]); e.target.textContent = "Copied"; setTimeout(() => e.target.textContent = "Copy", 1200); } catch (err) {}
-});
-$("btnTpl").addEventListener("click", () => $("dlgTpl").showModal());
-
-/* ======================= shortcuts dialog ======================= */
-$("btnSettings").addEventListener("click", () => {
-  $("setAddr").value = loadMap("ol_addr", "").txt; $("setPlat").value = loadMap("ol_plat", DEFAULT_PLATFORMS).txt;
-  $("dlgSettings").showModal();
-});
-$("saveSettings").addEventListener("click", () => {
-  try { localStorage.setItem("ol_addr", $("setAddr").value); localStorage.setItem("ol_plat", $("setPlat").value); } catch (e) {}
-  addrMap = loadMap("ol_addr", "").map; platMap = loadMap("ol_plat", DEFAULT_PLATFORMS).map;
-  $("dlgSettings").close();
-});
-document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
-
-/* ======================= connect dialog ======================= */
-$("btnConnect").addEventListener("click", () => {
-  $("gUrl").value = remote ? remote.url : ""; $("gKey").value = remote ? remote.key : ""; $("gNote").innerHTML = "";
-  $("dlgConnect").showModal();
-});
+/* ======================= connect + shortcuts dialogs ======================= */
+$("btnConnect").addEventListener("click", () => { $("gUrl").value = remote ? remote.url : ""; $("gKey").value = remote ? remote.key : ""; $("gNote").innerHTML = ""; $("dlgConnect").showModal(); });
 async function connectRemote(cfg) {
   const j = await api({ action: "read" }, cfg);
-  remote = cfg; try { localStorage.setItem("ol_remote", JSON.stringify(cfg)); } catch (e) {}
-  handle = null; memBytes = null; reconnectPending = false;
-  connected = true;
-  setStatus(`Google Sheet: ${j.name || "connected"}`);
-  learn(new RemoteSheet(j.values));
+  remote = cfg; lsSet("remote", JSON.stringify(cfg));
+  connected = true; DATA = j.data;
+  setStatus();
+  learn();
 }
 $("gSave").addEventListener("click", async () => {
   const cfg = { url: $("gUrl").value.trim(), key: $("gKey").value.trim() };
   if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(cfg.url)) { note("gNote", "err", "That doesn't look like an Apps Script web app URL."); return; }
   $("gSave").disabled = true; note("gNote", "warn", "Connecting…");
   try { await connectRemote(cfg); note("gNote", "ok", "✔ Connected."); setTimeout(() => $("dlgConnect").close(), 700); }
-  catch (e) { note("gNote", "err", esc(e.message)); }
-  finally { $("gSave").disabled = false; }
+  catch (e) { note("gNote", "err", esc(e.message)); } finally { $("gSave").disabled = false; }
 });
-$("gDisconnect").addEventListener("click", () => {
-  remote = null; connected = false; try { localStorage.removeItem("ol_remote"); } catch (e) {}
-  setStatus("Not connected"); $("dlgConnect").close();
-});
+$("gDisconnect").addEventListener("click", () => { remote = null; connected = false; lsSet("remote", "null"); $("fileStatus").textContent = "Not connected"; $("dlgConnect").close(); });
+$("btnSettings").addEventListener("click", () => { $("setAddr").value = loadMap("addr", "").txt; $("setPlat").value = loadMap("plat", DEFAULT_PLATFORMS).txt; $("dlgSettings").showModal(); });
+$("saveSettings").addEventListener("click", () => { lsSet("addr", $("setAddr").value); lsSet("plat", $("setPlat").value); addrMap = loadMap("addr", "").map; platMap = loadMap("plat", DEFAULT_PLATFORMS).map; $("dlgSettings").close(); });
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
 
-/* ======================= start: setup link, then saved connection ======================= */
+/* ======================= start ======================= */
+renderDealerSeg(); resetOrderForm(); resetPayForm(); refreshDatalists();
 (async () => {
   const m = location.hash.match(/connect=([^&]+)/);
   if (m) {
-    try { const cfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))); remote = { url: cfg.u, key: cfg.k }; localStorage.setItem("ol_remote", JSON.stringify(remote)); } catch (e) {}
+    try { const cfg = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(m[1]))))); remote = { url: cfg.u, key: cfg.k }; lsSet("remote", JSON.stringify(remote)); } catch (e) {}
     history.replaceState(null, "", location.pathname);
   }
   if (remote) {
-    setStatus("Connecting to Google Sheet…");
-    try { await connectRemote(remote); } catch (e) { setStatus("Couldn't load Google Sheet: " + e.message); }
-    return;
+    $("fileStatus").textContent = "Connecting to Google Sheets…";
+    try { await connectRemote(remote); } catch (e) { $("fileStatus").textContent = "Couldn't load: " + e.message; }
   }
-  if (!canSaveInPlace) return;
-  try {
-    const h = await idb.get("handle"); if (!h) return;
-    handle = h;
-    if (await hasPermission(false)) { await connected_(h.name, " (saves directly)"); return; }
-    reconnectPending = true;
-    setStatus(`Last file: ${h.name} (open Connect to reconnect)`);
-    $("btnFile").textContent = "Reconnect " + h.name;
-  } catch (e) {}
 })();
-
-window.__test = {   // used for automated testing only
-  async load(bytes, name) { memBytes = bytes; memName = name; handle = null; remote = null; await connected_(name, ""); },
-  connectRemote, RemoteSheet,
-  bytes: () => memBytes, parseOfdMessage
-};
+window.__test = { parseOfdMessage, parseClients, RemoteSheet, get L() { return L; } };
 </script>
 </body>
 </html>

@@ -1,14 +1,21 @@
-# Order Logger
+# Digital Den Order Logger
 
-A single-page tool for logging online order deliveries into an Excel sheet.
+A phone-friendly web app for logging online orders, deliveries and payments into Google Sheets.
 
-- **New delivery:** paste the "TODAY OUT FOR DELIVERY" WhatsApp message and the form fills itself (name, model, tracking, quantity, full mobile number from the last 4 digits, address from the pin code). Fill the rest from remembered dropdowns and add it to Excel.
-- **Out for delivery:** every order marked "Out for Delivery", with a one-click Delivered button.
-- **Payments:** log payments received.
-- **Chat:** paste `#ORDER`, `#PAYMENT` or `#UPDATE` messages.
+- **Dealer picker** (Rahul Yadav / Sourav Mondal) and a **year picker**. Each dealer has one sheet per year.
+- **Orders:** save an order when you place it (status Ordered). When the out-for-delivery message comes, tap the saved row (tick several rows for a multi-phone package) and paste the message to complete it.
+- **Out For Delivery:** one tap marks a package Delivered and adds Amount + Commission cut to the client whose card paid.
+- **Dealer Payments:** what each dealer still owes (delivered orders only), payments received, and **Start next year**, which creates next year's sheets and carries LEFT over as "Previous Year Due".
+- **Clients Payments:** what you owe each client, Pay (cash or "settled via dealer cut"), Share statement, Mark settled.
+- **Profit** (delivered orders) and **Tracking Search** across all dealers.
 
-Everything runs in your browser. Your Excel file is read and saved on your own computer and is never uploaded anywhere. Use Chrome or Edge on a computer to save straight into the file.
+## Google Drive layout
 
-## Google Sheets mode (phone, PC can be off)
+```
+Digital Den/
+  Payment Details
+  2026/  Rahul Yadav 2026, Sourav Mondal 2026
+  2027/  ...
+```
 
-`apps-script/Code.gs` is a small Apps Script web app that lets the page read and write your Google Sheet. Paste it into the sheet's Extensions > Apps Script, set your own `ACCESS_KEY`, and deploy it as a web app (Execute as: Me, Who has access: Anyone). Then press **Connect** on the page and enter the web app URL and key. The key is never stored in this repository.
+`apps-script/Code.gs` is the Apps Script web app that reads and writes these sheets. Its access key is set only inside your own Apps Script project, never in this repository.
