@@ -39,6 +39,10 @@
   @keyframes slideR { from { transform:translateX(-28px); opacity:.4; } to { transform:none; opacity:1; } }
   .panel { background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,.08); padding:16px; max-width:1000px; margin:0 auto 14px; }
   .panel h2 { margin:0 0 4px; font-size:16px; color:var(--dark); }
+  .nm { margin-top:12px; border:1px solid #f3d19c; background:#fffaf0; border-radius:10px; padding:8px 12px; }
+  .nm summary { cursor:pointer; font-weight:700; color:var(--warn); }
+  .nmrow { display:flex; gap:8px; align-items:flex-start; border-top:1px solid #f3e2c2; padding:7px 0; font-size:13.5px; }
+  .nmrow div { flex:1; min-width:0; overflow-wrap:anywhere; } .nmrow small { color:#5b6866; }
   .hint { font-size:13px; color:#5b6866; margin:0 0 10px; }
   textarea.paste { width:100%; min-height:130px; border:1.5px dashed #9fb7b2; border-radius:8px; padding:10px; font:14px/1.45 inherit; background:#fbfdfc; resize:vertical; }
   .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px 14px; }
@@ -165,6 +169,11 @@
     <p class="hint">Leave this empty when you're saving a new order right after placing it.</p>
     <textarea class="paste" id="pasteBox" placeholder="TODAY OUT FOR DELIVERY&#10;▪️ Parcel Name👉🏻 ...&#10;▪️ Model Name👉🏻 ...&#10;▪️ Tracking👉🏻 ...&#10;▪️ Quantity 👉🏻 ...&#10;▪️ OTP👉🏻 ...&#10;▪️ Phone No 👉🏻 ...&#10;▪️ Pin Code 👉🏻 ..."></textarea>
     <div id="pasteNote"></div>
+    <details id="nmBox" class="nm" style="display:none"><summary>Not matched (<span id="nmCount">0</span>)</summary>
+      <p class="hint">Pasted messages where the phone number, pin code or order could not be matched to a saved record. Use it to spot the odd formats people send. Saved on this device.</p>
+      <div id="nmList"></div>
+      <button class="btn small ghost" id="nmClear">Clear list</button>
+    </details>
   </div>
   <div class="panel">
     <div id="modeBar" class="mode" style="display:none"></div>
@@ -374,7 +383,7 @@ const DONE_STATUSES = ["delivered", "out for delivery", "returned", "cancelled"]
 const ORDER_FIELDS = [   // [key, label, type, required, wide]   manual details first
   ["date", "Order Date", "date", true], ["by", "Order Placed By", "text", true], ["platform", "Platform", "text", true],
   ["model", "Model", "text"], ["qty", "Quantity", "number"],
-  ["card", "Card Details", "text"], ["paid_by", "Amount Paid By", "text", true],
+  ["card", "Card Details", "text", true], ["paid_by", "Amount Paid By", "text", true],
   ["amount", "Amount", "number", true], ["return", "Return Amount", "number", true], ["commission", "Commission", "number"],
   ["commission_cut", "Commission Cut", "number"], ["have_to_return", "I Have To Return", "number"],
   ["cashback", "Cashback", "number"], ["bulk_extra", "Bulk Extra", "number"], ["status", "Delivery Status", "text"],
@@ -807,7 +816,8 @@ const sameModel = (a, b) => { const x = normModel(a), y = normModel(b); return x
 function applyPaste() {
   const text = $("pasteBox").value; if (!text.trim()) { lastPaste = null; return; }
   const { data, unknown } = parseOfdMessage(text);
-  if (!Object.keys(data).length) { note("pasteNote", "err", "Couldn't find Parcel Name, Model, Tracking etc. in that text."); return; }
+  pasteIssues = [];
+  if (!Object.keys(data).length) { note("pasteNote", "err", "Couldn't find Parcel Name, Model, Tracking etc. in that text."); nmAdd([{ what: "Message not read", value: text.trim().split(/\r?\n/)[0].slice(0, 60) }], data); return; }
   lastPaste = data;
   const D = L.dealers[dealer] || { incomplete: [], tracking: {} };
   pkgQty = Math.max(1, parseInt(String(data.qty || "1").replace(/\D/g, ""), 10) || 1);
@@ -831,15 +841,18 @@ function applyPaste() {
     } else if (!field("o.", "model").value) setField("model", data.model, true);
   }
   if (data.mobile && !field("o.", "mobile").readOnly) { const n = fillMobile(data.mobile, true); if (n) notes.push(n); }
+  if (data.mobile) { const r = resolveMobile(data.mobile, field("o.", "name").value); if (r.none) pasteIssues.push({ what: r.digits.length >= 3 && r.digits.length <= 6 ? "Phone: no saved number ends in these digits" : "Phone: odd format", value: data.mobile }); }
+  if (data.pin) { const pd = data.pin.replace(/\D/g, ""); if (!/^\d{6}$/.test(data.pin.trim())) pasteIssues.push({ what: "Pin code: odd format", value: data.pin }); else if (!L.pinAddr[pd] && !(hist["o.address"] || []).some(a => a.includes(pd)) && !Object.values(addrMap).some(a => a.includes(pd))) pasteIssues.push({ what: "Pin code: no saved address", value: data.pin }); }
   const w = applyPin(); if (w) notes.push({ kind: "warn", html: w });
   if (!field("o.", "platform").value) setField("platform", guessPlatform(data.tracking));
   const st = field("o.", "status").value.trim().toLowerCase();
   if (!st || st === ORDERED.toLowerCase()) field("o.", "status").value = OFD;
   if (!field("o.", "delivery_date").value) setField("delivery_date", today());
-  if (unknown.length) notes.push({ kind: "warn", html: `Ignored: ${unknown.map(esc).join(", ")}` });
+  if (unknown.length) { notes.push({ kind: "warn", html: `Ignored: ${unknown.map(esc).join(", ")}` }); pasteIssues.push({ what: "Unknown label", value: unknown.join(", ") }); }
   if (!editRow) {
     const cands = D.incomplete.filter(r => data.model && r.model && sameModel(r.model, data.model));
     renderIncomplete(cands.map(r => r.row));
+    if (!cands.length && D.incomplete.length) pasteIssues.push({ what: "No saved order matched", value: [data.model, data.tracking].filter(Boolean).join(" · ") || "(no model or tracking)" });
     if (cands.length) notes.unshift({ kind: "warn", html: `👆 ${cands.length === 1 ? "This looks like" : "This could be one of"} your saved order${cands.length > 1 ? "s" : ""}: ` +
       cands.map(r => `<button class="btn small pick" data-row="${r.row}">Row ${r.row} · ${fmtDate(r.dateObj)} · ${esc(r.card || "no card")}</button>`).join("") + `<br>Tap the right one, or ignore this to save it as a new row.` });
     if (data.tracking && D.tracking[data.tracking.trim().toUpperCase()]) notes.push({ kind: "warn", html: `⚠ Tracking ${esc(data.tracking)} is already in the sheet. You'll be asked what to do when you save.` });
@@ -848,7 +861,29 @@ function applyPaste() {
   notes.unshift({ kind: "ok", html: editRow ? `✔ Message added to ${ticked.size ? `rows ${[editRow, ...ticked].join(", ")}` : `row ${editRow}`}. Check the boxes and press Update.` : "✔ Filled from the message." });
   updateMode();
   $("pasteNote").innerHTML = notes.map(n => `<div class="note ${n.kind}">${n.html}</div>`).join("");
+  nmAdd(pasteIssues, data);
 }
+
+/* ---- "not matched" list: pastes whose number, pin or order found no saved record ---- */
+let pasteIssues = [], nmTimer = null;
+const nmLoad = () => { try { return JSON.parse(lsGet("notmatched", "[]")); } catch (e) { return []; } };
+function nmAdd(issues, data) {   // waits until the paste box is still, so half-typed text isn't logged
+  clearTimeout(nmTimer);
+  if (!issues.length) return;
+  nmTimer = setTimeout(() => {
+    const list = nmLoad(), when = new Date().toISOString(), ctx = [data.name, data.tracking].filter(Boolean).join(" · ");
+    for (const x of issues) if (!list.some(y => y.what === x.what && y.value === x.value)) list.unshift({ ...x, ctx, when, dealer });
+    lsSet("notmatched", JSON.stringify(list.slice(0, 60))); renderNotMatched();
+  }, 1500);
+}
+function renderNotMatched() {
+  const list = nmLoad();
+  $("nmBox").style.display = list.length ? "" : "none"; $("nmCount").textContent = list.length;
+  $("nmList").innerHTML = list.map((x, i) => `<div class="nmrow"><div><b>${esc(x.what)}</b>: ${esc(x.value)}<br><small>${fmtDate(new Date(x.when))}${x.dealer && DEALERS[x.dealer] ? " · " + esc(DEALERS[x.dealer].name) : ""}${x.ctx ? " · " + esc(x.ctx) : ""}</small></div><button class="btn small ghost" data-nm="${i}">✕</button></div>`).join("");
+}
+$("nmList").addEventListener("click", e => { if (e.target.dataset.nm === undefined) return; const l = nmLoad(); l.splice(+e.target.dataset.nm, 1); lsSet("notmatched", JSON.stringify(l)); renderNotMatched(); });
+$("nmClear").addEventListener("click", () => { if (confirm("Clear the not matched list?")) { lsSet("notmatched", "[]"); renderNotMatched(); } });
+renderNotMatched();
 $("pasteBox").addEventListener("input", () => { applyPaste(); markMissing(); });
 
 /* ---- open an incomplete row ---- */
@@ -1469,7 +1504,7 @@ $("dealerSeg").addEventListener("click", e => {
   dealer = k; lsSet("dealer", k); renderDealerSeg(); resetOrderForm(); note("orderNote"); renderAll();
 });
 /* ---------- swipe left / right to change tabs (phones + laptop trackpads) ---------- */
-const APP_VERSION = "v20.11-2";
+const APP_VERSION = "v21.11-1";
 function goTab(dir) {
   const tabs = [...document.querySelectorAll("nav button")], i = tabs.findIndex(b => b.classList.contains("active"));
   const next = tabs[i + dir];
