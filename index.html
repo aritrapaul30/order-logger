@@ -32,8 +32,10 @@
   .badge { background:#fff; color:var(--dark); border-radius:10px; padding:0 7px; font-size:12px; margin-left:4px; }
   .tab { display:none; flex:1; overflow-y:auto; padding:16px; }
   .tab.active { display:block; }
-  .tab { touch-action:pan-y; overscroll-behavior-x:none; }
+  .tab { touch-action:pan-y pinch-zoom; overscroll-behavior-x:none; }
   .scroll, details { touch-action:auto; }
+  /* phones zoom in on any box with text under 16px when you tap it: keep boxes at 16px */
+  @media (max-width:700px) { input, select, textarea { font-size:16px !important; } }
   .ver { opacity:.6; font-size:11px; margin-left:6px; }
   @keyframes slideL { from { transform:translateX(28px); opacity:.4; } to { transform:none; opacity:1; } }
   @keyframes slideR { from { transform:translateX(-28px); opacity:.4; } to { transform:none; opacity:1; } }
@@ -52,8 +54,13 @@
   .field.missing input { background:#fdecea; border-color:#ef9a9a; }
   .field.missing label { color:#c62828; }
   .field.missing label::after { content:" · missing"; font-weight:500; font-size:11.5px; }
+  .field.force label::after { content:" · not matched, type it in"; }
   .field label { display:block; font-size:12.5px; font-weight:600; color:#40514e; margin-bottom:3px; }
   .field input, .field select { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px; font:inherit; background:#fff; }
+  .sgghost { position:absolute; pointer-events:none; color:#a6b2af; border:1px solid transparent; white-space:pre; overflow:hidden; display:none; z-index:2; }
+  .sgbox { position:absolute; z-index:30; background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.14); max-height:230px; overflow-y:auto; display:none; }
+  .sgi { padding:9px 11px; font-size:14.5px; cursor:pointer; border-bottom:1px solid #f0f3f2; }
+  .sgi:last-child { border-bottom:0; } .sgi:hover, .sgi.on { background:#e7f5f0; } .sgi b { color:var(--dark); }
   .field input:focus { outline:2px solid #9be0d0; border-color:var(--mid); }
   .field.wide { grid-column:1 / -1; }
   .field.filled input { background:#effaf5; border-color:#9fd8c4; }
@@ -310,8 +317,8 @@
   <h3 id="epTitle">Edit Payment</h3>
   <div class="grid">
     <div class="field"><label class="req" for="epDate">Payment Date</label><input id="epDate" type="date"></div>
-    <div class="field"><label class="req" for="epSender">Sender</label><input id="epSender" list="dl-p.sender" autocomplete="off"></div>
-    <div class="field"><label class="req" for="epBank">Bank</label><input id="epBank" list="dl-p.bank" autocomplete="off"></div>
+    <div class="field"><label class="req" for="epSender">Sender</label><input id="epSender" data-list="p.sender" autocomplete="off"></div>
+    <div class="field"><label class="req" for="epBank">Bank</label><input id="epBank" data-list="p.bank" autocomplete="off"></div>
     <div class="field"><label class="req" for="epAmount">Amount Got</label><input id="epAmount" inputmode="decimal" autocomplete="off"></div>
   </div>
   <div id="epNote"></div>
@@ -652,7 +659,7 @@ function buildForm(container, fields, prefix) {
 }
 function fieldHtml([k, label, type, req, wide], prefix) {
   return `<div class="field${wide ? " wide" : ""}${k === "pin" ? " hidden" : ""}" id="f-${prefix}${k}"><label class="${req ? "req" : ""}" for="${prefix}${k}">${label}</label>
-     <input id="${prefix}${k}" type="${type === "date" ? "date" : "text"}" ${type === "number" ? 'inputmode="decimal"' : ""} ${NO_LIST.has(k) ? "" : `list="dl-${prefix}${k}"`} autocomplete="off">
+     <input id="${prefix}${k}" type="${type === "date" ? "date" : "text"}" ${type === "number" ? 'inputmode="decimal"' : ""} ${NO_LIST.has(k) ? "" : `data-list="${prefix}${k}"`} autocomplete="off">
      ${k === "pin" ? '<small>Picks the saved address for this pin</small>' : ""}${k === "commission" ? '<small>Return − Amount. Type any two of the three</small>' : ""}${k === "have_to_return" ? '<small>Amount + Commission cut. Fill either one</small>' : ""}${k === "paid_by" ? '<small>Whose card paid. Links to Clients Payments</small>' : ""}</div>`;
 }
 buildForm("orderForm", ORDER_FIELDS, "o.");
@@ -665,9 +672,88 @@ function refreshDatalists() {
     const f = key.slice(2), vals = [...new Set([...(hist[key] || []), ...(L.lists[key] || []), ...(DEFAULT_LISTS[f] || [])])];
     const allNum = vals.length && vals.every(v => /^-?\d+(\.\d+)?$/.test(v));
     vals.sort(allNum ? (x, y) => x - y : (x, y) => x.localeCompare(y, undefined, { sensitivity: "base", numeric: true }));
-    return `<datalist id="dl-${key}">${vals.slice(0, 400).map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
+    SUGG[key] = vals;
+    return "";
   }).join("");
 }
+
+/* ---- suggestions: grey auto-complete inside the box + a list that narrows as you type ---- */
+const SUGG = {};
+const sgNorm = v => String(v).toLowerCase().replace(/\s+/g, " ").trim();
+function sgMatches(key, typed) {
+  const all = SUGG[key] || [], q = sgNorm(typed);
+  if (!q) return all.slice(0, 50);
+  const words = q.split(" "), out = [];
+  for (const v of all) {
+    const n = sgNorm(v); if (n === q) continue;
+    const vw = n.split(/[\s\-\/,.()]+/);
+    let score;
+    if (n.startsWith(q)) score = 0;                                                       // starts with what you typed
+    else if (words.every(w => vw.some(x => x.startsWith(w)))) score = 1;                  // every typed word starts a word
+    else if (words.every(w => n.includes(w))) score = 2;                                  // every typed word appears
+    else continue;
+    out.push([score, v]);
+  }
+  return out.sort((a, b) => a[0] - b[0]).slice(0, 30).map(x => x[1]);
+}
+const sg = { inp: null, box: null, ghost: null, items: [], hi: -1 };
+function sgEnsure(inp) {
+  const wrap = inp.parentElement; wrap.style.position = "relative";
+  if (!inp._ghost) { const g = document.createElement("div"); g.className = "sgghost"; wrap.appendChild(g); inp._ghost = g; }
+  if (!sg.box) { sg.box = document.createElement("div"); sg.box.className = "sgbox"; sg.box.addEventListener("mousedown", e => e.preventDefault());
+    sg.box.addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) sgPick(sg.items[+b.dataset.i]); }); }
+  if (sg.box.parentElement !== wrap) wrap.appendChild(sg.box);
+}
+function sgUpdate(inp) {
+  if (inp.readOnly || inp.disabled) { sgHide(); return; }
+  sgEnsure(inp); sg.inp = inp;
+  const typed = inp.value, items = sgMatches(inp.dataset.list, typed);
+  sg.items = items; sg.hi = -1;
+  // grey completion: the best match that starts with exactly what you typed
+  const g = inp._ghost, first = typed && items.find(v => v.toLowerCase().startsWith(typed.toLowerCase()));
+  const atEnd = inp.selectionStart === typed.length;
+  if (first && atEnd && inp.scrollWidth <= inp.clientWidth + 1) {
+    const cs = getComputedStyle(inp);
+    Object.assign(g.style, { left: inp.offsetLeft + "px", top: inp.offsetTop + "px", width: inp.offsetWidth + "px", height: inp.offsetHeight + "px",
+      padding: cs.padding, font: cs.font, borderWidth: cs.borderWidth, lineHeight: cs.lineHeight, display: "block" });
+    g.innerHTML = `<span style="color:transparent">${esc(typed)}</span>${esc(first.slice(typed.length))}`;
+    inp._ghostVal = first;
+  } else { g.style.display = "none"; inp._ghostVal = null; }
+  if (!items.length) { sg.box.style.display = "none"; return; }
+  sg.box.style.top = (inp.offsetTop + inp.offsetHeight + 2) + "px"; sg.box.style.left = inp.offsetLeft + "px"; sg.box.style.width = inp.offsetWidth + "px";
+  const q = sgNorm(typed).split(" ").filter(Boolean);
+  const mark = v => q.length ? esc(v).replace(new RegExp("(" + q.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "gi"), "<b>$1</b>") : esc(v);
+  sg.box.innerHTML = items.map((v, i) => `<div class="sgi" data-i="${i}">${mark(v)}</div>`).join("") + (typed ? "" : "");
+  sg.box.style.display = "block";
+}
+function sgHide() { if (sg.box) sg.box.style.display = "none"; if (sg.inp && sg.inp._ghost) sg.inp._ghost.style.display = "none"; sg.items = []; }
+function sgPick(v) {
+  const inp = sg.inp; if (!inp || v == null) return;
+  inp.value = v; sgHide();
+  inp.dispatchEvent(new Event("input", { bubbles: true })); inp.dispatchEvent(new Event("change", { bubbles: true }));
+  sgHide();
+}
+function sgHighlight(d) {
+  if (!sg.items.length) return;
+  sg.hi = (sg.hi + d + sg.items.length) % sg.items.length;
+  [...sg.box.children].forEach((c, i) => c.classList.toggle("on", i === sg.hi));
+  sg.box.children[sg.hi].scrollIntoView({ block: "nearest" });
+}
+document.addEventListener("focusin", e => { if (e.target.dataset && e.target.dataset.list) sgUpdate(e.target); });
+document.addEventListener("input", e => { if (e.target.dataset && e.target.dataset.list && e.isTrusted) sgUpdate(e.target); });
+document.addEventListener("click", e => { if (e.target.dataset && e.target.dataset.list && e.target === document.activeElement) sgUpdate(e.target); });
+document.addEventListener("focusout", e => { if (e.target.dataset && e.target.dataset.list) setTimeout(() => { if (document.activeElement !== e.target) sgHide(); }, 120); });
+document.addEventListener("keydown", e => {
+  const inp = e.target; if (!inp.dataset || !inp.dataset.list || inp !== sg.inp) return;
+  const open = sg.box && sg.box.style.display === "block";
+  if (e.key === "ArrowDown" && open) { e.preventDefault(); sgHighlight(1); }
+  else if (e.key === "ArrowUp" && open) { e.preventDefault(); sgHighlight(-1); }
+  else if (e.key === "Enter" && open && sg.hi >= 0) { e.preventDefault(); sgPick(sg.items[sg.hi]); }
+  else if ((e.key === "Tab" || e.key === "ArrowRight" || e.key === "Enter") && inp._ghostVal && inp.selectionStart === inp.value.length && inp.value !== inp._ghostVal) {
+    if (e.key !== "Tab") e.preventDefault(); sgPick(inp._ghostVal);
+  }
+  else if (e.key === "Escape") sgHide();
+});
 
 let editRow = null;        // row number being completed, or null for a new order
 let ticked = new Set();    // other rows in the same package (same message, different cards)
@@ -701,6 +787,7 @@ function resetOrderForm(keepPaste) {
   field("o.", "qty").value = "1";
   if (!keepPaste) { $("pasteBox").value = ""; $("pasteNote").innerHTML = ""; }
   trioOrder = []; editRow = null; editOrig = null; ticked = new Set(); pkgQty = 0;
+  if (!keepPaste) forceReq.clear();
   updateMode(); markMissing();
 }
 function updateMode() {
@@ -814,9 +901,9 @@ function parseOfdMessage(text) {
 let lastPaste = null;
 const sameModel = (a, b) => { const x = normModel(a), y = normModel(b); return x && y && (x === y || x.includes(y) || y.includes(x)); };
 function applyPaste() {
-  const text = $("pasteBox").value; if (!text.trim()) { lastPaste = null; return; }
+  const text = $("pasteBox").value; if (!text.trim()) { lastPaste = null; forceReq.clear(); markMissing(); return; }
   const { data, unknown } = parseOfdMessage(text);
-  pasteIssues = [];
+  pasteIssues = []; forceReq.clear();
   if (!Object.keys(data).length) { note("pasteNote", "err", "Couldn't find Parcel Name, Model, Tracking etc. in that text."); nmAdd([{ what: "Message not read", value: text.trim().split(/\r?\n/)[0].slice(0, 60) }], data); return; }
   lastPaste = data;
   const D = L.dealers[dealer] || { incomplete: [], tracking: {} };
@@ -841,8 +928,11 @@ function applyPaste() {
     } else if (!field("o.", "model").value) setField("model", data.model, true);
   }
   if (data.mobile && !field("o.", "mobile").readOnly) { const n = fillMobile(data.mobile, true); if (n) notes.push(n); }
-  if (data.mobile) { const r = resolveMobile(data.mobile, field("o.", "name").value); if (r.none) pasteIssues.push({ what: r.digits.length >= 3 && r.digits.length <= 6 ? "Phone: no saved number ends in these digits" : "Phone: odd format", value: data.mobile }); }
+  if (data.mobile) { const r = resolveMobile(data.mobile, field("o.", "name").value); if (!r.full) forceReq.set("mobile", r.choices ? "pick one of the saved numbers or type the full number" : "no saved number matched, type the full 10-digit number"); if (r.none) pasteIssues.push({ what: r.digits.length >= 3 && r.digits.length <= 6 ? "Phone: no saved number ends in these digits" : "Phone: odd format", value: data.mobile }); }
   if (data.pin) { const pd = data.pin.replace(/\D/g, ""); if (!/^\d{6}$/.test(data.pin.trim())) pasteIssues.push({ what: "Pin code: odd format", value: data.pin }); else if (!L.pinAddr[pd] && !(hist["o.address"] || []).some(a => a.includes(pd)) && !Object.values(addrMap).some(a => a.includes(pd))) pasteIssues.push({ what: "Pin code: no saved address", value: data.pin }); }
+  if (data.pin && !field("o.", "address").value.trim()) forceReq.set("address", "no saved address for this pin, type it once");
+  if (!/rupay/i.test(field("o.", "platform").value)) for (const [k, l] of [["name", "Parcel Name"], ["tracking", "Tracking ID"], ["mobile", "Phone No"]])
+    if (!data[k] && !field("o.", k).value.trim() && !forceReq.has(k)) { forceReq.set(k, "not in the message, type it in"); pasteIssues.push({ what: `${l} missing in message`, value: data.name || data.tracking || "" }); }
   const w = applyPin(); if (w) notes.push({ kind: "warn", html: w });
   if (!field("o.", "platform").value) setField("platform", guessPlatform(data.tracking));
   const st = field("o.", "status").value.trim().toLowerCase();
@@ -866,6 +956,7 @@ function applyPaste() {
 
 /* ---- "not matched" list: pastes whose number, pin or order found no saved record ---- */
 let pasteIssues = [], nmTimer = null;
+const forceReq = new Map();   // boxes the message couldn't fill or match: must be typed before saving
 const nmLoad = () => { try { return JSON.parse(lsGet("notmatched", "[]")); } catch (e) { return []; } };
 function nmAdd(issues, data) {   // waits until the paste box is still, so half-typed text isn't logged
   clearTimeout(nmTimer);
@@ -913,7 +1004,8 @@ function selectRow(n, extra = []) {
 /* red tint on the boxes an incomplete row still needs */
 const NEEDED = ["date", "by", "platform", "model", "card", "paid_by", "amount", "return", "name", "mobile", "tracking", "delivery_date", "address"];
 function markMissing() {
-  for (const [k] of ORDER_FIELDS) $("f-o." + k).classList.remove("missing");
+  for (const [k] of ORDER_FIELDS) $("f-o." + k).classList.remove("missing", "force");
+  for (const k of forceReq.keys()) if (!field("o.", k).value.trim()) $("f-o." + k).classList.add("missing", "force");
   if (!editRow) return;
   const rupay = /rupay/i.test(field("o.", "platform").value);
   for (const k of NEEDED) {
@@ -923,8 +1015,8 @@ function markMissing() {
   const st = field("o.", "status").value.trim().toLowerCase();
   if (!st || st === ORDERED.toLowerCase()) $("f-o.status").classList.add("missing");
 }
-$("orderForm").addEventListener("input", () => { if (editRow) markMissing(); });
-$("orderForm").addEventListener("change", () => { if (editRow) markMissing(); });
+$("orderForm").addEventListener("input", () => markMissing());
+$("orderForm").addEventListener("change", () => markMissing());
 
 function renderIncomplete(cands = []) {
   const D = L.dealers[dealer];
@@ -979,7 +1071,7 @@ function readOrderForm() {
   for (const [k, label, type, req] of ORDER_FIELDS) {
     if (k === "pin" || k === "have_to_return") continue;
     const raw = field("o.", k).value.trim();
-    if (!raw) { if (req) problems.push(`${label} is empty`); continue; }
+    if (!raw) { if (req) problems.push(`${label} is empty`); else if (forceReq.has(k)) problems.push(`${label}: ${forceReq.get(k)}`); continue; }
     try {
       if (k === "mobile" && raw.replace(/\D/g, "").length !== 10) throw new Error("should be a full 10-digit number");
       if (type === "date") data[k] = fromIso(raw);
@@ -1504,7 +1596,7 @@ $("dealerSeg").addEventListener("click", e => {
   dealer = k; lsSet("dealer", k); renderDealerSeg(); resetOrderForm(); note("orderNote"); renderAll();
 });
 /* ---------- swipe left / right to change tabs (phones + laptop trackpads) ---------- */
-const APP_VERSION = "v21.11-1";
+const APP_VERSION = "v21.11-2";
 function goTab(dir) {
   const tabs = [...document.querySelectorAll("nav button")], i = tabs.findIndex(b => b.classList.contains("active"));
   const next = tabs[i + dir];
@@ -1529,10 +1621,11 @@ function goTab(dir) {
     goTab(dx < 0 ? 1 : -1);
   };
   document.addEventListener("touchstart", e => {
-    if (e.touches.length !== 1 || (e.target.closest && skip(e.target))) { x0 = null; return; }
+    const zoomed = window.visualViewport && visualViewport.scale > 1.05;   // zoomed in: one finger pans, no tab change
+    if (e.touches.length !== 1 || zoomed || (e.target.closest && skip(e.target))) { x0 = null; return; }
     x0 = x1 = e.touches[0].clientX; y0 = y1 = e.touches[0].clientY; t0 = Date.now();
   }, { passive: true });
-  document.addEventListener("touchmove", e => { if (x0 !== null && e.touches.length === 1) { x1 = e.touches[0].clientX; y1 = e.touches[0].clientY; } }, { passive: true });
+  document.addEventListener("touchmove", e => { if (e.touches.length > 1) { x0 = null; return; } if (x0 !== null && e.touches.length === 1) { x1 = e.touches[0].clientX; y1 = e.touches[0].clientY; } }, { passive: true });
   document.addEventListener("touchend", e => { if (x0 !== null && e.changedTouches[0]) { x1 = e.changedTouches[0].clientX; y1 = e.changedTouches[0].clientY; } finish(); }, { passive: true });
   document.addEventListener("touchcancel", finish, { passive: true });
   // two-finger sideways swipe on a laptop trackpad
